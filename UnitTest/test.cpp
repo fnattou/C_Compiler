@@ -59,14 +59,24 @@ namespace {
 		}
 		else {
 			// ‹N“®Ž¸”s
-			std::wcout << L"Execution of " << filename.data() <<   L" failed.Error code : " <<  GetLastError() << std::endl;
+			std::wcout << L"Execution of " << filename.data() <<   L".exe failed.Error code : " <<  GetLastError() << std::endl;
 			return -1;
 		}
 
 	}
 }
 
-TEST(CompilerTest,FirstTest) {
+#define COMPILE_AND_TEST(src, filename, result) \
+Compiler c;\
+c.Compile(src, filename);\
+assemble(filename);\
+EXPECT_EQ(execute(L##filename), result);\
+
+TEST(CompilerTest, ExecuteFunctionReturnExecutionResult) {
 	assemble("test");
 	EXPECT_EQ(execute(L"test"), 42);
+}
+
+TEST(CompilerTest, Compile_JustZero) {
+	COMPILE_AND_TEST("0", "JustZero", 0);
 }
