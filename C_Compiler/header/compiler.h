@@ -6,5 +6,7 @@ class Compiler
 public:
 	Compiler(){}
 	~Compiler(){}
-	string Compile(string src);
+	void Compile(string src, string filename);
+private:
+	void OutputFile(string src, string filename);
 };
