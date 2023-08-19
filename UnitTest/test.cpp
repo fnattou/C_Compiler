@@ -80,3 +80,7 @@ TEST(CompilerTest, ExecuteFunctionReturnExecutionResult) {
 TEST(CompilerTest, Compile_JustZero) {
 	COMPILE_AND_TEST("0", "JustZero", 0);
 }
+
+TEST(CompilerTest, Compile_SomeCalc) {
+	COMPILE_AND_TEST("1+1", "SomeCalc", 2);
+}
