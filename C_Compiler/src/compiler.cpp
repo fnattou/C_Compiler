@@ -9,9 +9,8 @@ namespace {
 		fprintf(stderr, "\n");
 		exit(1);
 	}
-
-	
 }
+
 Compiler::Compiler()
 	:mResultStr()
 	,mTokenTbl()
@@ -19,7 +18,6 @@ Compiler::Compiler()
 {
  
 }
-
 
 void Compiler::Compile(string src, string filename) {
 	srcStr = src;
@@ -32,7 +30,6 @@ void Compiler::Compile(string src, string filename) {
 	mResultStr += ("  ret\n");
 	OutputFile(filename);
 }
-
 
 void Compiler::OutputFile(string filename) {
 	std::ofstream wf;
@@ -97,7 +94,6 @@ void Compiler::appendAssemblyLine(string_view operand, string_view reg, int num)
 	mResultStr += "\n";
 }
 
-
 void Compiler::error_at(int pos, const char* fmt...) const {
 
 	fprintf(stderr, "%s\n", srcStr.c_str());
@@ -111,7 +107,6 @@ void Compiler::error_at(int pos, const char* fmt...) const {
 	fprintf(stderr, "\n");
 	exit(1);
 }
-
 
 int Compiler::Token::expectNumber() const {
 	if (mType != Token::TokenType::Num) {

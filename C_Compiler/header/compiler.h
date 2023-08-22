@@ -28,6 +28,12 @@ private:
 		int num
 		);
 
+	string srcStr;
+	string mResultStr;
+	class Token;
+	std::vector<Token> mTokenTbl;
+	size_t mCurrentPos;
+
 	class Token
 	{
 	public:
@@ -45,7 +51,6 @@ private:
 			:mType(type), mVal(num), mStr(str)
 		{
 		};
-
 
 		/// <summary>
 		/// 次のトークンが数値の場合、トークンを１つ読み進めてその数値を返す。
@@ -69,8 +74,4 @@ private:
 			return mType == Token::TokenType::Reserved && mStr == op;
 		}
 	};
-	string srcStr;
-	string mResultStr;
-	std::vector<Token> mTokenTbl;
-	size_t mCurrentPos;
 };
