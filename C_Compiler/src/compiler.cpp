@@ -46,14 +46,14 @@ void Compiler::Parse() {
 	appendAssemblyLine("mov", "rax", mTokenTbl[cnt++].expectNumber());
 	while (cnt < mTokenTbl.size())
 	{
-		const auto t = mTokenTbl[cnt++];
+		const auto& t = mTokenTbl[cnt++];
 		if (t.at_eof()) {
 			break;
 		}
-		if (t.expect('+')) {
+		if (t.isOperator('+')) {
 			appendAssemblyLine("add", "rax", mTokenTbl[cnt++].expectNumber());
 		}
-		else if (t.expect('-')) {
+		else if (t.isOperator('-')) {
 			appendAssemblyLine("sub", "rax", mTokenTbl[cnt++].expectNumber());
 		}
 	}

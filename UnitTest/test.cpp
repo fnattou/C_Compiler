@@ -84,3 +84,11 @@ TEST(CompilerTest, Compile_JustZero) {
 TEST(CompilerTest, Compile_SomeCalc) {
 	COMPILE_AND_TEST("1+1", "SomeCalc", 2);
 }
+
+TEST(CompilerTest, Compile_SomeCalcWithSpace) {
+	COMPILE_AND_TEST("1 + 2", "SomeCalcWithSpace", 3);
+}
+
+TEST(CompilerTest, Compile_MultipleCalcWithSpace) {
+	COMPILE_AND_TEST("1 + 2 - 1 + 4", "SomeCalcWithSpace", 6);
+}

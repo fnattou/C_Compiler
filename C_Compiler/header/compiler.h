@@ -62,6 +62,10 @@ private:
 		bool at_eof() const {
 			return mType == Token::TokenType::Eof;
 		}
+
+		bool isOperator(char op) const {
+			return mType == Token::TokenType::Reserved && mStr == op;
+		}
 	};
 
 	string mResultStr;
