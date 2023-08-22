@@ -18,7 +18,9 @@ private:
 	/// “ü—Í•¶š—ñ‚ğƒg[ƒNƒ“‚É•ªŠ„‚µ‚ÄTokenTbl‚É•Û‘¶‚·‚é
 	/// </summary>
 	/// <param name="src">“ü—Í•¶š—ñ</param>
-	void Tokenize(string& src);
+	void Tokenize();
+
+	void error_at(int pos, const char* fmt...) const;
 
 	void appendAssemblyLine(
 		string_view operand,
@@ -67,7 +69,7 @@ private:
 			return mType == Token::TokenType::Reserved && mStr == op;
 		}
 	};
-
+	string srcStr;
 	string mResultStr;
 	std::vector<Token> mTokenTbl;
 	size_t mCurrentPos;

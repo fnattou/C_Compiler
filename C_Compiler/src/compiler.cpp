@@ -22,11 +22,12 @@ Compiler::Compiler()
 
 
 void Compiler::Compile(string src, string filename) {
+	srcStr = src;
 	mResultStr.reserve(200);
 	mResultStr += (".intel_syntax noprefix\n");
 	mResultStr += (".globl main\n");
 	mResultStr += ("main:\n");
-	Tokenize(src);
+	Tokenize();
 	Parse();
 	mResultStr += ("  ret\n");
 	OutputFile(filename);
@@ -59,38 +60,30 @@ void Compiler::Parse() {
 	}
 }
 
-void Compiler::Tokenize(string& src) {
+void Compiler::Tokenize() {
 	mTokenTbl.reserve(100);
-	for (int i = 0; i < src.size(); ++i) {
-		const auto c = src[i];
+	for (int i = 0; i < srcStr.size(); ++i) {
+		const auto c = srcStr[i];
 		if (isspace(c)) {
 			continue;
 		}
 
 		if (c == '+' || c == '-') {
-			mTokenTbl.emplace_back(
-				Token::TokenType::Reserved,
-				0,
-				c
-			);
+			mTokenTbl.emplace_back(Token::TokenType::Reserved, 0, c);
 			continue;
 		}
 
 		if (isdigit(c)) {
 			char* endptr;
-			int j = strtol(&src.at(i), &endptr, 10);
-			while (src.data() + i + 1 < endptr) {
+			int j = strtol(&srcStr.at(i), &endptr, 10);
+			while (srcStr.data() + i + 1 < endptr) {
 				++i;
 			}
 
-			mTokenTbl.emplace_back(
-				Token::TokenType::Num,
-				j,
-				c
-			);
+			mTokenTbl.emplace_back(Token::TokenType::Num, j, c );
 			continue;
 		}
-		error("トークナイズできません");
+		error_at(i, "トークナイズできません");
 	}
 }
 
@@ -103,6 +96,22 @@ void Compiler::appendAssemblyLine(string_view operand, string_view reg, int num)
 	mResultStr += std::to_string(num);
 	mResultStr += "\n";
 }
+
+
+void Compiler::error_at(int pos, const char* fmt...) const {
+
+	fprintf(stderr, "%s\n", srcStr.c_str());
+	fprintf(stderr, "%*s", pos, " "); //pos個の空白を出力
+	fprintf(stderr, "^ "); //エラーの出た目印を入力
+
+	//エラーメッセージ出力
+	va_list ap;
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, "\n");
+	exit(1);
+}
+
 
 int Compiler::Token::expectNumber() const {
 	if (mType != Token::TokenType::Num) {
