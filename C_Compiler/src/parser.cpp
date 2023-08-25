@@ -46,6 +46,8 @@ Parser::Node* Parser::Primaly() {
 		mTokenTbl[++mCurrentPos].expect(')');
 		return node;
 	}
+
+	// ‚»‚¤‚Å‚È‚¯‚ê‚Î”’l‚Ì‚Í‚¸
 	mNodeTbl.push_back(Node{ nodeType::Num, nullptr, nullptr, t.expectNumber()});
 	return &mNodeTbl.at(mNodeTbl.size() - 1);
 }

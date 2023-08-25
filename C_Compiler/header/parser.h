@@ -27,8 +27,10 @@ class Parser {
 
 	vector<Node> mNodeTbl;
 	size_t mCurrentPos;
-	vector<Token>& mTokenTbl;
+	vector<Token> mTokenTbl;
 public:
+	Parser(){}
+
 	Parser(vector<Token>& tbl)
 		:mNodeTbl()
 		,mCurrentPos()
