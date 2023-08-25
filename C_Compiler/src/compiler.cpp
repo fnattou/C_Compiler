@@ -1,15 +1,6 @@
 #include "compiler.h"
 #include <fstream>
 #include <stdarg.h>
-namespace {
-	void error(const char* fmt...) {
-		va_list ap;
-		va_start(ap, fmt);
-		vfprintf(stderr, fmt, ap);
-		fprintf(stderr, "\n");
-		exit(1);
-	}
-}
 
 Compiler::Compiler()
 	:mResultStr()
@@ -20,7 +11,7 @@ Compiler::Compiler()
 }
 
 void Compiler::Compile(string src, string filename) {
-	srcStr = src;
+	mSrcStr = src;
 	mResultStr.reserve(200);
 	mResultStr += (".intel_syntax noprefix\n");
 	mResultStr += (".globl main\n");
@@ -59,8 +50,8 @@ void Compiler::Parse() {
 
 void Compiler::Tokenize() {
 	mTokenTbl.reserve(100);
-	for (int i = 0; i < srcStr.size(); ++i) {
-		const auto c = srcStr[i];
+	for (int i = 0; i < mSrcStr.size(); ++i) {
+		const auto c = mSrcStr[i];
 		if (isspace(c)) {
 			continue;
 		}
@@ -72,8 +63,8 @@ void Compiler::Tokenize() {
 
 		if (isdigit(c)) {
 			char* endptr;
-			int j = strtol(&srcStr.at(i), &endptr, 10);
-			while (srcStr.data() + i + 1 < endptr) {
+			int j = strtol(&mSrcStr.at(i), &endptr, 10);
+			while (mSrcStr.data() + i + 1 < endptr) {
 				++i;
 			}
 
@@ -96,7 +87,7 @@ void Compiler::appendAssemblyLine(string_view operand, string_view reg, int num)
 
 void Compiler::error_at(int pos, const char* fmt...) const {
 
-	fprintf(stderr, "%s\n", srcStr.c_str());
+	fprintf(stderr, "%s\n", mSrcStr.c_str());
 	fprintf(stderr, "%*s", pos, " "); //pos個の空白を出力
 	fprintf(stderr, "^ "); //エラーの出た目印を入力
 
@@ -106,18 +97,4 @@ void Compiler::error_at(int pos, const char* fmt...) const {
 	vfprintf(stderr, fmt, ap);
 	fprintf(stderr, "\n");
 	exit(1);
-}
-
-int Compiler::Token::expectNumber() const {
-	if (mType != Token::TokenType::Num) {
-		error("数ではありません");
-	}
-	return mVal;
-}
-
-bool Compiler::Token::expect(char op) const{
-	if (mType != Token::TokenType::Reserved || mStr != op) {
-		error("'%c'ではありません");
-	}
-	return true;
 }
