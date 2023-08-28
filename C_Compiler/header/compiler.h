@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <iostream>
+#include <sstream>
 #include <vector>
 #include "parser.h"
 
@@ -14,8 +16,6 @@ public:
 private:
 	void OutputFile(string filename);
 
-	void Parse();
-
 	/// <summary>
 	/// “ü—Í•¶š—ñ‚ğƒg[ƒNƒ“‚É•ªŠ„‚µ‚ÄTokenTbl‚É•Û‘¶‚·‚é
 	/// </summary>
@@ -24,14 +24,10 @@ private:
 
 	void error_at(int pos, const char* fmt...) const;
 
-	void appendAssemblyLine(
-		string_view operand,
-		string_view reg,
-		int num
-		);
+	void ReadNodeTree(Parser::Node& node);
 
 	string mSrcStr;
-	string mResultStr;
+	std::ostringstream oss;
 	std::vector<Token> mTokenTbl;
 	size_t mCurrentPos;
 	Parser mParser;

@@ -1,10 +1,8 @@
 #include "compiler.h"
 #include <fstream>
 #include <stdarg.h>
-
 Compiler::Compiler()
-	:mResultStr()
-	,mTokenTbl()
+	:mTokenTbl()
 	,mCurrentPos(0)
 {
  
@@ -12,13 +10,13 @@ Compiler::Compiler()
 
 void Compiler::Compile(string src, string filename) {
 	mSrcStr = src;
-	mResultStr.reserve(200);
-	mResultStr += (".intel_syntax noprefix\n");
-	mResultStr += (".globl main\n");
-	mResultStr += ("main:\n");
+	oss << ".intel_syntax noprefix\n";
+	oss << ".globl main\n";
+	oss << "main:" << std::endl;
 	Tokenize();
-	Parse();
-	mResultStr += ("  ret\n");
+	mParser.Parse(mTokenTbl);
+	ReadNodeTree(mParser.getFirstNode());
+	oss << "  ret\n";
 	OutputFile(filename);
 }
 
@@ -26,26 +24,44 @@ void Compiler::OutputFile(string filename) {
 	std::ofstream wf;
 	filename += ".s";
 	wf.open(filename, std::ios::out);
-	wf << mResultStr.c_str() << std::endl;
+	wf << oss.str() << std::endl;
 	wf.close();
 }
 
-void Compiler::Parse() {
-	size_t cnt = 0;
-	appendAssemblyLine("mov", "rax", mTokenTbl[cnt++].expectNumber());
-	while (cnt < mTokenTbl.size())
-	{
-		const auto& t = mTokenTbl[cnt++];
-		if (t.at_eof()) {
-			break;
-		}
-		if (t.isOperator('+')) {
-			appendAssemblyLine("add", "rax", mTokenTbl[cnt++].expectNumber());
-		}
-		else if (t.isOperator('-')) {
-			appendAssemblyLine("sub", "rax", mTokenTbl[cnt++].expectNumber());
-		}
+void Compiler::ReadNodeTree(Parser::Node& node) {
+	using Node = Parser::Node; using Type = Parser::nodeType;
+	if (node.type == Type::Num) {
+		oss << "  push " << node.val << "\n";
 	}
+
+	//—t‚Ìƒm[ƒh‚Å‚È‚¢ê‡
+	if (!node.lhs&& !node.rhs) {
+		return;
+	}
+
+	ReadNodeTree(*node.lhs);
+	ReadNodeTree(*node.rhs);
+
+	oss << "  pop rdi\n";
+	oss << "  pop rax\n";
+
+	switch (node.type) {
+	case Type::Add:
+		oss << "  add rax rdi\n";
+		break;
+	case Type::Sub:	
+		oss << "  sub rax rdi\n";
+		break;
+	case Type::Mul:
+		oss << "  imul rax rdi\n";
+		break;
+	case Type::Div:
+		oss << "  cqo\n";
+		oss << "  idiv rdi\n";
+		break;
+	}
+
+	oss << "  push rax" << std::endl;
 }
 
 void Compiler::Tokenize() {
@@ -75,15 +91,6 @@ void Compiler::Tokenize() {
 	}
 }
 
-void Compiler::appendAssemblyLine(string_view operand, string_view reg, int num) {
-	mResultStr += "  ";
-	mResultStr += operand;
-	mResultStr += " ";
-	mResultStr += reg;
-	mResultStr += ", ";
-	mResultStr += std::to_string(num);
-	mResultStr += "\n";
-}
 
 void Compiler::error_at(int pos, const char* fmt...) const {
 

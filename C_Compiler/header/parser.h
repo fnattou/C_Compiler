@@ -5,6 +5,7 @@ using std::vector;
 
 //入力されたトークン列を解析して抽象構文木を作成するクラス
 class Parser {
+public:
 	enum class nodeType {
 		Add, 
 		Sub,
@@ -20,16 +21,19 @@ class Parser {
 		int val; //typeがNumのときだけ使う
 	};
 
-
-	Node* Expr();
-	Node* Mul();
-	Node* Primaly();
-
 	vector<Node> mNodeTbl;
 	size_t mCurrentPos;
 	vector<Token> mTokenTbl;
-public:
-	Parser(){}
+
+	Node& getFirstNode() {
+		return mNodeTbl[0];
+	}
+
+	Parser()
+		:mNodeTbl()
+		,mCurrentPos()
+		,mTokenTbl()
+	{}
 
 	Parser(vector<Token>& tbl)
 		:mNodeTbl()
@@ -38,4 +42,8 @@ public:
 	{}
 
 	void Parse(vector<Token>& tokenTbl);
+private:
+	Node* Expr();
+	Node* Mul();
+	Node* Primaly();
 };

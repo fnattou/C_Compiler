@@ -1,8 +1,7 @@
 #pragma once
 
-class Token
+struct Token
 {
-public:
 	enum class TokenType
 	{
 		Reserved, //記号
@@ -13,10 +12,13 @@ public:
 	int mVal;        //種類が整数の場合、その数値
 	char mStr;      //トークン文字列
 
+	Token() = default;
+
 	Token(TokenType type, int num, char str)
 		:mType(type), mVal(num), mStr(str)
 	{
-	};
+	}
+
 
 	/// <summary>
 	/// 次のトークンが数値の場合、トークンを１つ読み進めてその数値を返す。

@@ -92,3 +92,12 @@ TEST(CompilerTest, Compile_SomeCalcWithSpace) {
 TEST(CompilerTest, Compile_MultipleCalcWithSpace) {
 	COMPILE_AND_TEST("1 + 2 - 1 + 4", "SomeCalcWithSpace", 6);
 }
+
+TEST(ParserTest, SingleNumToken) {
+	Parser p;
+	vector<Token> tVec;
+	tVec.push_back(Token( Token::TokenType::Num, 0, '0'));
+	p.Parse(tVec);
+	EXPECT_EQ(p.getFirstNode().type, Parser::nodeType::Num);
+	EXPECT_EQ(p.getFirstNode().val, 0);
+}

@@ -2,7 +2,7 @@
 #include "parser.h"
 Parser::Node* Parser::Expr() {
 	Node* node = Mul();
-	while (1) {
+	while (mCurrentPos < mTokenTbl.size()) {
 		Token& currentToken = mTokenTbl[mCurrentPos];
 		if (currentToken.isOperator('+')) {
 			mNodeTbl.push_back(Node{ nodeType::Add, node, Mul() });
@@ -21,7 +21,7 @@ Parser::Node* Parser::Expr() {
  
 Parser::Node* Parser::Mul() {
 	Node* node = Primaly();
-	while (1) {
+	while (mCurrentPos < mTokenTbl.size()) {
 		Token& currentToken = mTokenTbl[mCurrentPos];
 		if (currentToken.isOperator('*')) {
 			mNodeTbl.push_back(Node{ nodeType::Mul, node, Primaly() });
@@ -55,5 +55,8 @@ Parser::Node* Parser::Primaly() {
 void Parser::Parse(vector<Token>& tokenTbl) {
 	mTokenTbl = tokenTbl;
 	mNodeTbl.reserve(tokenTbl.size());
+	if (mTokenTbl.size() > 0) {
+		Expr();
+	}
 }
 
