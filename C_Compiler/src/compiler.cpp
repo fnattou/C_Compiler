@@ -15,7 +15,14 @@ void Compiler::Compile(string src, string filename) {
 	oss << "main:" << std::endl;
 	Tokenize();
 	mParser.Parse(mTokenTbl);
-	ReadNodeTree(mParser.getFirstNode());
+	const auto size = mParser.mNodeTbl.size();
+	if (size == 1) {
+		oss << "  push " << mParser.getFirstNode().val << std::endl;
+	}
+	else if (size > 1) {
+		ReadNodeTree(mParser.getFirstNode());
+	}
+	oss << "  pop rax\n";
 	oss << "  ret\n";
 	OutputFile(filename);
 }
@@ -34,7 +41,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		oss << "  push " << node.val << "\n";
 	}
 
-	//葉のノードでない場合
+	//葉のノードの場合
 	if (!node.lhs&& !node.rhs) {
 		return;
 	}
