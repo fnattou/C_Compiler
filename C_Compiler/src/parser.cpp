@@ -5,18 +5,20 @@ Parser::Node* Parser::Expr() {
 	while (mCurrentPos < mTokenTbl.size()) {
 		Token& currentToken = mTokenTbl[mCurrentPos];
 		if (currentToken.isOperator('+')) {
+			++mCurrentPos;
 			mNodeTbl.push_back(Node{ nodeType::Add, node, Mul() });
 			node = &mNodeTbl.at(mNodeTbl.size() - 1);
 		}
 		else if (currentToken.isOperator('-')) {
+			++mCurrentPos;
 			mNodeTbl.push_back(Node{ nodeType::Sub, node, Mul() });
 			node = &mNodeTbl.at(mNodeTbl.size() - 1);
 		}
 		else {
 			return node;
 		}
-		++mCurrentPos;
 	}
+	return node;
 }
  
 Parser::Node* Parser::Mul() {
@@ -24,26 +26,28 @@ Parser::Node* Parser::Mul() {
 	while (mCurrentPos < mTokenTbl.size()) {
 		Token& currentToken = mTokenTbl[mCurrentPos];
 		if (currentToken.isOperator('*')) {
+			++mCurrentPos;
 			mNodeTbl.push_back(Node{ nodeType::Mul, node, Primaly() });
 			node = &mNodeTbl.at(mNodeTbl.size() - 1);
 		}
 		else if (currentToken.isOperator('/')) {
+			++mCurrentPos;
 			mNodeTbl.push_back(Node{ nodeType::Div, node, Primaly() });
 			node = &mNodeTbl.at(mNodeTbl.size() - 1);
 		}
 		else {
 			return node;
 		}
-		++mCurrentPos;
 	}
+	return node;
 }
 
 Parser::Node* Parser::Primaly() {
 	//次のトークンが"("なら、"(" expr ")"のはず	
-	Token& t = mTokenTbl[mCurrentPos];
+	Token& t = mTokenTbl[mCurrentPos++];
 	if (t.isOperator('(')) {
 		Node* node = Expr();
-		mTokenTbl[++mCurrentPos].expect(')');
+		mTokenTbl[mCurrentPos++].expect(')');
 		return node;
 	}
 

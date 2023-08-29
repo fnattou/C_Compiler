@@ -17,10 +17,10 @@ void Compiler::Compile(string src, string filename) {
 	mParser.Parse(mTokenTbl);
 	const auto size = mParser.mNodeTbl.size();
 	if (size == 1) {
-		oss << "  push " << mParser.getFirstNode().val << std::endl;
+		oss << "  push " << mParser.getLastNode().val << std::endl;
 	}
 	else if (size > 1) {
-		ReadNodeTree(mParser.getFirstNode());
+		ReadNodeTree(mParser.getLastNode());
 	}
 	oss << "  pop rax\n";
 	oss << "  ret\n";
@@ -42,7 +42,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 	}
 
 	//—t‚Ìƒm[ƒh‚Ìê‡
-	if (!node.lhs&& !node.rhs) {
+	if (!node.lhs && !node.rhs) {
 		return;
 	}
 
@@ -54,13 +54,13 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 
 	switch (node.type) {
 	case Type::Add:
-		oss << "  add rax rdi\n";
+		oss << "  add rax, rdi\n";
 		break;
 	case Type::Sub:	
-		oss << "  sub rax rdi\n";
+		oss << "  sub rax, rdi\n";
 		break;
 	case Type::Mul:
-		oss << "  imul rax rdi\n";
+		oss << "  imul rax, rdi\n";
 		break;
 	case Type::Div:
 		oss << "  cqo\n";

@@ -93,11 +93,19 @@ TEST(CompilerTest, Compile_MultipleCalcWithSpace) {
 	COMPILE_AND_TEST("1 + 2 - 1 + 4", "SomeCalcWithSpace", 6);
 }
 
-TEST(ParserTest, SingleNumToken) {
-	Parser p;
-	vector<Token> tVec;
-	tVec.push_back(Token( Token::TokenType::Num, 0, '0'));
-	p.Parse(tVec);
-	EXPECT_EQ(p.getFirstNode().type, Parser::nodeType::Num);
-	EXPECT_EQ(p.getFirstNode().val, 0);
+TEST(CompilerTest, Compile_CalcWithMul) {
+	COMPILE_AND_TEST("2 * 2", "SomeCalcWithSpace", 4);
 }
+
+TEST(CompilerTest, Compile_CalcWithMulAndPlus) {
+	COMPILE_AND_TEST("2 * 2 + 1", "SomeCalcWithSpace", 5);
+}
+
+TEST(CompilerTest, Compile_Div) {
+	COMPILE_AND_TEST("2 / 2", "SomeCalcWithSpace", 1);
+}
+
+TEST(CompilerTest, Compile_DivAndMinus) {
+	COMPILE_AND_TEST("2 / 2 - 1", "SomeCalcWithSpace", 0);
+} 
+

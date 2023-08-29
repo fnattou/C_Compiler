@@ -25,8 +25,8 @@ public:
 	size_t mCurrentPos;
 	vector<Token> mTokenTbl;
 
-	Node& getFirstNode() {
-		return mNodeTbl[0];
+	Node& getLastNode() {
+		return mNodeTbl[mNodeTbl.size() - 1];
 	}
 
 	Parser()
