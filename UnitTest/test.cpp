@@ -109,3 +109,6 @@ TEST(CompilerTest, Compile_DivAndMinus) {
 	COMPILE_AND_TEST("2 / 2 - 1", "SomeCalcWithSpace", 0);
 } 
 
+TEST(CompilerTest, Compile_CalcWithPriority) {
+	COMPILE_AND_TEST("2 / 2 - (1 + 1)", "SomeCalcWithSpace", -1 );
+} 
