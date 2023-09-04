@@ -79,7 +79,7 @@ void Compiler::Tokenize() {
 			continue;
 		}
 
-		if (c == '+' || c == '-') {
+		if (c == '+' || c == '-' || c == '*' || c == '/') {
 			mTokenTbl.emplace_back(Token::TokenType::Reserved, 0, c);
 			continue;
 		}
