@@ -46,4 +46,6 @@ private:
 	Node* Expr();
 	Node* Mul();
 	Node* Primaly();
+	Node* Unary();
+	Node* PushBackNode(Node n);
 };
