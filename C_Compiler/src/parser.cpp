@@ -74,7 +74,9 @@ Parser::Node* Parser::Unary() {
 
 void Parser::Parse(vector<Token>& tokenTbl) {
 	mTokenTbl = tokenTbl;
-	mNodeTbl.reserve(tokenTbl.size());
+	//Fix me : ポインタでlhs, rhsを保存しているため、サイズ拡張時に壊れる。
+	//回避策として多めにとっておく
+	mNodeTbl.reserve(tokenTbl.size() * 10);
 	if (mTokenTbl.size() > 0) {
 		Expr();
 	}
