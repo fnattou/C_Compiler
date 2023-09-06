@@ -15,13 +15,7 @@ void Compiler::Compile(string src, string filename) {
 	oss << "main:" << std::endl;
 	Tokenize();
 	mParser.Parse(mTokenTbl);
-	const auto size = mParser.mNodeTbl.size();
-	if (size == 1) {
-		oss << "  push " << mParser.getLastNode().val << std::endl;
-	}
-	else if (size > 1) {
-		ReadNodeTree(mParser.getLastNode());
-	}
+	ReadNodeTree(mParser.getLastNode());
 	oss << "  pop rax\n";
 	oss << "  ret\n";
 	OutputFile(filename);

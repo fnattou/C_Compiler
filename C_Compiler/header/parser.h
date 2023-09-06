@@ -35,17 +35,17 @@ public:
 		,mTokenTbl()
 	{}
 
-	Parser(vector<Token>& tbl)
-		:mNodeTbl()
-		,mCurrentPos()
-		,mTokenTbl(tbl)
-	{}
-
 	void Parse(vector<Token>& tokenTbl);
 private:
+	//------------------------------------------
+	//’ŠÛ\•¶–Ø‚Ì¶¬•¶–@
+	//------------------------------------------
+
 	Node* Expr();
 	Node* Mul();
 	Node* Primaly();
 	Node* Unary();
+
+	//ì¬‚µ‚½Node‚ğŠi”[‚·‚é
 	Node* PushBackNode(Node n);
 };
