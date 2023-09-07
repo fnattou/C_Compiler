@@ -80,6 +80,17 @@ void Compiler::Tokenize() {
 			continue;
 		}
 
+		//“ñ•¶š‚Ì‰Â”\«‚ª‚ ‚éê‡
+		if (c == '=' || c == '<' || c == '>' || c == '!') {
+			++i;
+			int len = 1;
+			if (i < mSrcStr.size() && mSrcStr[i] == '=') {
+				len = 2;
+			}
+			mTokenTbl.emplace_back(Token::TokenType::Reserved, 0, ref, len);
+			continue;
+		}
+
 		if (isdigit(c)) {
 			char* endptr;
 			int j = strtol(ref, &endptr, 10);

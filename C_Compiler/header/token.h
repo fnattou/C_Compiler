@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 struct Token
 {
@@ -40,11 +41,11 @@ struct Token
 	}
 
 	bool isOperator(char op) const {
-		return mType == Token::TokenType::Reserved && mStr[0] == op;
+		return mType == Token::TokenType::Reserved && mLen == 1 && mStr[0] == op;
 	}
 
-	bool isOperator(char* str) const {
-		return mType == Token::TokenType::Reserved && memcmp(mStr, str, mLen);
+	bool isOperator(const char* str) const {
+		return mType == Token::TokenType::Reserved && mLen == 2 && !memcmp(mStr, str, mLen);
 	}
 };
 
