@@ -25,6 +25,17 @@ Parser::Node* Parser::Expr() {
 	}
 	return node;
 }
+
+Parser::Node* Parser::Relational() {
+	Node* node = Add();
+	while (mCurrentPos < mTokenTbl.size()) {
+
+	}
+}
+
+Parser::Node* Parser::Add() {
+
+}
  
 Parser::Node* Parser::Mul() {
 	Node* node = Unary();

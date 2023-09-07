@@ -68,6 +68,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 void Compiler::Tokenize() {
 	mTokenTbl.reserve(100);
 	for (int i = 0; i < mSrcStr.size(); ++i) {
+		char* ref = &mSrcStr[i];
 		const auto c = mSrcStr[i];
 		if (isspace(c)) {
 			continue;
@@ -75,18 +76,18 @@ void Compiler::Tokenize() {
 
 		if (c == '+' || c == '-' || c == '*' || c == '/'
 			|| c == '(' || c == ')') {
-			mTokenTbl.emplace_back(Token::TokenType::Reserved, 0, c);
+			mTokenTbl.emplace_back(Token::TokenType::Reserved, 0, ref, 1);
 			continue;
 		}
 
 		if (isdigit(c)) {
 			char* endptr;
-			int j = strtol(&mSrcStr.at(i), &endptr, 10);
+			int j = strtol(ref, &endptr, 10);
 			while (mSrcStr.data() + i + 1 < endptr) {
 				++i;
 			}
 
-			mTokenTbl.emplace_back(Token::TokenType::Num, j, c );
+			mTokenTbl.emplace_back(Token::TokenType::Num, j, ref, 1);
 			continue;
 		}
 		error_at(i, "トークナイズできません");

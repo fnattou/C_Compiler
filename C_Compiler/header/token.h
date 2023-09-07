@@ -10,12 +10,13 @@ struct Token
 	};
 	TokenType mType; //トークンの種類
 	int mVal;        //種類が整数の場合、その数値
-	char mStr;      //トークン文字列
+	char* mStr;      //トークン文字列
+	int mLen;         //トークン文字列の長さ
 
 	Token() = default;
 
-	Token(TokenType type, int num, char str)
-		:mType(type), mVal(num), mStr(str)
+	Token(TokenType type, int num, char* str, int len)
+		:mType(type), mVal(num), mStr(str), mLen(len)
 	{
 	}
 
@@ -39,7 +40,11 @@ struct Token
 	}
 
 	bool isOperator(char op) const {
-		return mType == Token::TokenType::Reserved && mStr == op;
+		return mType == Token::TokenType::Reserved && mStr[0] == op;
+	}
+
+	bool isOperator(char* str) const {
+		return mType == Token::TokenType::Reserved && memcmp(mStr, str, mLen);
 	}
 };
 

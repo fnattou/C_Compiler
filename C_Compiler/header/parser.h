@@ -42,6 +42,8 @@ private:
 	//------------------------------------------
 
 	Node* Expr();
+	Node* Relational();
+	Node* Add();
 	Node* Mul();
 	Node* Primaly();
 	Node* Unary();
