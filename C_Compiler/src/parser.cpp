@@ -6,21 +6,51 @@ Parser::Node* Parser::PushBackNode(Node n) {
 	return &mNodeTbl.at(mNodeTbl.size() - 1);
 }
 
+Parser::nodeType Parser::GetNodeType(Token& token) {
+	if (token.isOperator('+')) {
+		return nodeType::Add;
+	}
+	else if (token.isOperator('-')) {
+		return nodeType::Sub;
+	}
+	else if (token.isOperator('*')) {
+		return nodeType::Mul;
+	}
+	else if (token.isOperator('/')) {
+		return nodeType::Div;
+	}
+	else if (token.isOperator('>')) {
+		return nodeType::Lt;
+	}
+	else if (token.isOperator('<')) {
+		return nodeType::Gt;
+	}
+	else if (token.isOperator("<=")) {
+		return nodeType::Le;
+	}
+	else if (token.isOperator(">=")) {
+		return nodeType::Ge;
+	}
+	else if (token.isOperator("==")) {
+		return nodeType::Eq;
+	}
+	else if (token.isOperator("!=")) {
+		return nodeType::Ne;
+	}
+	return nodeType::None;
+}
+
 
 Parser::Node* Parser::Expr() {
-	Node* node = Mul();
+	Node* node = Relational();
 	while (mCurrentPos < mTokenTbl.size()) {
-		Token& currentToken = mTokenTbl[mCurrentPos];
-		if (currentToken.isOperator('+')) {
-			++mCurrentPos;
-			node = PushBackNode(Node{ nodeType::Add, node, Mul() });
-		}
-		else if (currentToken.isOperator('-')) {
-			++mCurrentPos;
-			node = PushBackNode(Node{ nodeType::Sub, node, Mul() });
-		}
-		else {
-			return node;
+		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
+			case nodeType::Eq:
+			case nodeType::Ne:
+				++mCurrentPos;
+				node = PushBackNode(Node{ type, node, Relational() });
+			default:
+				return node;
 		}
 	}
 	return node;
@@ -29,27 +59,44 @@ Parser::Node* Parser::Expr() {
 Parser::Node* Parser::Relational() {
 	Node* node = Add();
 	while (mCurrentPos < mTokenTbl.size()) {
-
+		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
+		case nodeType::Lt:
+		case nodeType::Le:
+		case nodeType::Gt:
+		case nodeType::Ge:
+			++mCurrentPos;
+			node = PushBackNode(Node{ type, node, Add() });
+		default:
+			return node;
+		}
 	}
+	return node;
 }
 
 Parser::Node* Parser::Add() {
-
+	Node* node = Mul();
+	while (mCurrentPos < mTokenTbl.size()) {
+		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
+		case nodeType::Add:
+		case nodeType::Sub:
+			++mCurrentPos;
+			node = PushBackNode(Node{ type, node, Mul() });
+		default:
+			return node;
+		}
+	}
+	return node;
 }
  
 Parser::Node* Parser::Mul() {
 	Node* node = Unary();
 	while (mCurrentPos < mTokenTbl.size()) {
-		Token& currentToken = mTokenTbl[mCurrentPos];
-		if (currentToken.isOperator('*')) {
+		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
+		case nodeType::Mul:
+		case nodeType::Div:
 			++mCurrentPos;
-			node = PushBackNode(Node{ nodeType::Mul, node, Unary() });
-		}
-		else if (currentToken.isOperator('/')) {
-			++mCurrentPos;
-			node = PushBackNode(Node{ nodeType::Div, node, Unary() });
-		}
-		else {
+			node = PushBackNode(Node{ type, node, Unary() });
+		default:
 			return node;
 		}
 	}
@@ -70,17 +117,19 @@ Parser::Node* Parser::Primaly() {
 }
 
 Parser::Node* Parser::Unary() {
-	Token& t = mTokenTbl[mCurrentPos];
-	if (t.isOperator('+')) {
+	switch (GetNodeType(mTokenTbl[mCurrentPos])) {
+	case nodeType::Add:
 		++mCurrentPos;
 		return Primaly();
-	}
-	if (t.isOperator('-')) {
+	case nodeType::Sub:   //’P€-‚Ì‚Æ‚«‚É‚Í0|Num‚É•ÏŠ·‚·‚é
 		++mCurrentPos;
+		{
 		Node* node = PushBackNode(Node{ nodeType::Num, nullptr, nullptr, 0 });
 		return PushBackNode(Node{ nodeType::Sub, node, Primaly() });
+		}
+	default:
+		return Primaly();
 	}
-	return Primaly();
 }
 
 void Parser::Parse(vector<Token>& tokenTbl) {

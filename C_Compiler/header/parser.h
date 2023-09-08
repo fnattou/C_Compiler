@@ -11,7 +11,14 @@ public:
 		Sub,
 		Mul,
 		Div,
+		Eq,
+		Ne,
+		Lt,
+		Le,
+		Gt,
+		Ge,
 		Num,
+		None,
 	};
 
 	struct Node {
@@ -50,4 +57,7 @@ private:
 
 	//作成したNodeを格納する
 	Node* PushBackNode(Node n);
+
+	//トークンを調べて該当するノードタイプを返す
+	nodeType GetNodeType(Token& token);
 };

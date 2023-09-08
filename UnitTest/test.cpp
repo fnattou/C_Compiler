@@ -90,33 +90,33 @@ TEST(CompilerTest, Compile_SomeCalcWithSpace) {
 }
 
 TEST(CompilerTest, Compile_MultipleCalcWithSpace) {
-	COMPILE_AND_TEST("1 + 2 - 1 + 4", "SomeCalcWithSpace", 6);
+	COMPILE_AND_TEST("1 + 2 - 1 + 4", "MultipleCalcWithSpace", 6);
 }
 
 TEST(CompilerTest, Compile_CalcWithMul) {
-	COMPILE_AND_TEST("2 * 2", "SomeCalcWithSpace", 4);
+	COMPILE_AND_TEST("2 * 2", "CalcWithMul", 4);
 }
 
 TEST(CompilerTest, Compile_CalcWithMulAndPlus) {
-	COMPILE_AND_TEST("2 * 2 + 1", "SomeCalcWithSpace", 5);
+	COMPILE_AND_TEST("2 * 2 + 1", "CalcWithMulAndPlus", 5);
 }
 
-TEST(CompilerTest, Compile_Div) {
-	COMPILE_AND_TEST("2 / 2", "SomeCalcWithSpace", 1);
+TEST(CompilerTest, Compile_SimpleDiv) {
+	COMPILE_AND_TEST("2 / 2", "SimpleDiv", 1);
 }
 
 TEST(CompilerTest, Compile_DivAndMinus) {
-	COMPILE_AND_TEST("2 / 2 - 1", "SomeCalcWithSpace", 0);
+	COMPILE_AND_TEST("2 / 2 - 1", "DivAndMinus", 0);
 } 
 
 TEST(CompilerTest, Compile_CalcWithPriority) {
-	COMPILE_AND_TEST("2 / 2 - (1 + 1)", "SomeCalcWithSpace", -1 );
+	COMPILE_AND_TEST("2 / 2 - (1 + 1)", "CalcWithPriority", -1 );
 } 
 
 TEST(CompilerTest, Compile_CalcWithSinglePlus) {
-	COMPILE_AND_TEST("2 * + 2", "SomeCalcWithSpace", 4 );
+	COMPILE_AND_TEST("2 * + 2", "CalcWithSinglePlus", 4 );
 } 
 
 TEST(CompilerTest, Compile_CalcWithSingleMinus) {
-	COMPILE_AND_TEST("2 * - 2", "SomeCalcWithSpace", -4 );
+	COMPILE_AND_TEST("2 * - 2", "CalcWithSingleMinus", -4 );
 } 
