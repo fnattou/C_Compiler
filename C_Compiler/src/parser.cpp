@@ -49,6 +49,7 @@ Parser::Node* Parser::Expr() {
 			case nodeType::Ne:
 				++mCurrentPos;
 				node = PushBackNode(Node{ type, node, Relational() });
+				continue;
 			default:
 				return node;
 		}
@@ -66,6 +67,7 @@ Parser::Node* Parser::Relational() {
 		case nodeType::Ge:
 			++mCurrentPos;
 			node = PushBackNode(Node{ type, node, Add() });
+			continue;
 		default:
 			return node;
 		}
@@ -81,6 +83,7 @@ Parser::Node* Parser::Add() {
 		case nodeType::Sub:
 			++mCurrentPos;
 			node = PushBackNode(Node{ type, node, Mul() });
+			continue;
 		default:
 			return node;
 		}
@@ -96,6 +99,7 @@ Parser::Node* Parser::Mul() {
 		case nodeType::Div:
 			++mCurrentPos;
 			node = PushBackNode(Node{ type, node, Unary() });
+			continue;
 		default:
 			return node;
 		}

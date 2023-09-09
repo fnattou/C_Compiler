@@ -60,6 +60,35 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		oss << "  cqo\n";
 		oss << "  idiv rdi\n";
 		break;
+	case Type::Eq:
+	case Type::Ne:
+	case Type::Le:
+	case Type::Lt:
+	case Type::Gt:
+	case Type::Ge:
+		if (node.type == Type::Ge || node.type == Type::Gt) {
+			oss << "  cmp rdi, rax\n";
+		}
+		else {
+			oss << "  cmp rax, rdi\n";
+		}
+		switch (node.type) {
+			case Type::Eq:
+				oss << "  sete al\n";
+				break;
+			case Type::Ne:
+				oss << "  setne al\n";
+				break;
+			case Type::Le:
+			case Type::Ge:
+				oss << "  setle al\n";
+				break;
+			case Type::Lt:
+			case Type::Gt:
+				oss << "  setl al\n";
+				break;
+		}
+		oss << "  movzb rax, al\n";
 	}
 
 	oss << "  push rax" << std::endl;
