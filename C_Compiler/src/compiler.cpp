@@ -120,6 +120,12 @@ void Compiler::Tokenize() {
 			continue;
 		}
 
+		//•Ï”éŒ¾‚Ìê‡
+		if ('a' <= c && c <= 'z') {
+			mTokenTbl.emplace_back(Token::TokenType::Ident, 0, ref, 1);
+			continue;
+		}
+
 		if (isdigit(c)) {
 			char* endptr;
 			int j = strtol(ref, &endptr, 10);
