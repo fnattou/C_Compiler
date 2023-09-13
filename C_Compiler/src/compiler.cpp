@@ -9,15 +9,30 @@ Compiler::Compiler()
 }
 
 void Compiler::Compile(string src, string filename) {
+	//トークナイズ、パースを行い、抽象構文木を作成する
 	mSrcStr = src;
+	Tokenize();
+	mParser.Parse(mTokenTbl);
+
+	//アセンブリの前半部分を出力
 	oss << ".intel_syntax noprefix\n";
 	oss << ".globl main\n";
 	oss << "main:" << std::endl;
-	Tokenize();
-	mParser.Parse(mTokenTbl);
+
+	//プロローグ : 変数26個分の領域を確保する
+	oss << "  push rbp\n";
+	oss << "  mov rbp, rsp\n";
+	oss << "  sub rsp, 208\n";
+
+	//先頭の式から順にコードを生成
+	//Todo複数の式を格納したmRootNodeTblから式を生成する
 	ReadNodeTree(mParser.getLastNode());
+
+	//エピローグ : 最後の式の結果がRAXに残っているのでそれを返り値とする
 	oss << "  pop rax\n";
 	oss << "  ret\n";
+
+	//結果をファイルに保存
 	OutputFile(filename);
 }
 
@@ -29,11 +44,42 @@ void Compiler::OutputFile(string filename) {
 	wf.close();
 }
 
+void Compiler::ReadLValueNode(Parser::Node& node) {
+	using Node = Parser::Node; using Type = Parser::nodeType;
+	if (node.type != Type::LovalVal) {
+		std::cerr << "代入の左辺値が変数ではありません";
+	}
+
+	oss << "  mov rax, rbp\n";
+	oss << "  sub rax, " << node.offset <<"\n";	
+	oss << "  push  rax\n";
+}
+
 void Compiler::ReadNodeTree(Parser::Node& node) {
 	using Node = Parser::Node; using Type = Parser::nodeType;
-	if (node.type == Type::Num) {
+	switch (node.type) 
+	{
+	case Type::Num:
 		oss << "  push " << node.val << "\n";
+		return;
+	case Type::Assign:
+		ReadLValueNode(*node.lhs);
+		ReadNodeTree(*node.rhs);
+		oss << "  pop rdi\n";
+		oss << "  mov rax\n";
+		oss << "  mov [rax], rdi\n";
+		oss << "  push rdi\n";
+		return;
+	case Type::LovalVal:
+		ReadLValueNode(node);
+		oss << "  pop rax\n";
+		oss << "  mov rax, [rax]\n";
+		oss << "  push rax\n";
+		return;
+	default:
+		break;
 	}
+
 
 	//葉のノードの場合
 	if (!node.lhs && !node.rhs) {

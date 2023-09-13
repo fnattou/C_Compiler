@@ -24,7 +24,11 @@ private:
 
 	void error_at(int pos, const char* fmt...) const;
 
+	//パース後の抽象構文木を読み込んで、コードを作成する
 	void ReadNodeTree(Parser::Node& node);
+
+	//左辺値としてノードを読みこむ
+	void ReadLValueNode(Parser::Node& node);
 
 	string mSrcStr;
 	std::ostringstream oss;

@@ -7,7 +7,10 @@ using std::vector;
 class Parser {
 public:
 	enum class nodeType {
-		Add, 
+		Expr,
+		Assign,  // = 
+		LovalVal,
+		Add,
 		Sub,
 		Mul,
 		Div,
@@ -26,9 +29,11 @@ public:
 		Node* lhs;
 		Node* rhs;
 		int val; //typeがNumのときだけ使う
+		int offset; //typeがLocalValの時だけ使う
 	};
 
 	vector<Node> mNodeTbl;
+	vector<Node*> mRootNodeTbl;
 	size_t mCurrentPos;
 	vector<Token> mTokenTbl;
 
@@ -38,8 +43,8 @@ public:
 
 	Parser()
 		:mNodeTbl()
-		,mCurrentPos()
-		,mTokenTbl()
+		, mCurrentPos()
+		, mTokenTbl()
 	{}
 
 	void Parse(vector<Token>& tokenTbl);
@@ -48,12 +53,16 @@ private:
 	//抽象構文木の生成文法
 	//------------------------------------------
 
+	Node* Program();
+	Node* Statement();
 	Node* Expr();
+	Node* Assign();
+	Node* Equality();
 	Node* Relational();
 	Node* Add();
 	Node* Mul();
-	Node* Primaly();
 	Node* Unary();
+	Node* Primaly();
 
 	//作成したNodeを格納する
 	Node* PushBackNode(Node n);

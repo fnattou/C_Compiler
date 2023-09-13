@@ -40,18 +40,55 @@ Parser::nodeType Parser::GetNodeType(Token& token) {
 	return nodeType::None;
 }
 
+Parser::Node* Parser::Program() {
+	while (mCurrentPos < mTokenTbl.size()) {
+		Node* node = Statement();
+		mRootNodeTbl.push_back(node);
+	}
+}
+
+Parser::Node* Parser::Statement() {
+	Node* node = Expr();
+	mTokenTbl.at(mCurrentPos).expect(';');
+	return node;
+}
 
 Parser::Node* Parser::Expr() {
+	return Assign();
+	//Node* node = Relational();
+	//while (mCurrentPos < mTokenTbl.size()) {
+	//	switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
+	//		case nodeType::Eq:
+	//		case nodeType::Ne:
+	//			++mCurrentPos;
+	//			node = PushBackNode(Node{ type, node, Relational() });
+	//			continue;
+	//		default:
+	//			return node;
+	//	}
+	//}
+	//return node;
+}
+
+Parser::Node* Parser::Assign() {
+	Node* node = Equality();
+	if (mTokenTbl[mCurrentPos].isOperator('=')) {
+		++mCurrentPos;
+		node = PushBackNode(Node{ nodeType::Assign,  node, Assign() });
+	}
+	return node;
+}
+
+Parser::Node* Parser::Equality() {
 	Node* node = Relational();
 	while (mCurrentPos < mTokenTbl.size()) {
 		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
-			case nodeType::Eq:
-			case nodeType::Ne:
-				++mCurrentPos;
-				node = PushBackNode(Node{ type, node, Relational() });
-				continue;
-			default:
-				return node;
+		case nodeType::Eq:
+		case nodeType::Ne:
+			node = PushBackNode(Node{ type, node, Relational() });
+			continue;
+		default:
+			break;
 		}
 	}
 	return node;
@@ -114,6 +151,10 @@ Parser::Node* Parser::Primaly() {
 		Node* node = Expr();
 		mTokenTbl[mCurrentPos++].expect(')');
 		return node;
+	}
+	else if (t.isIdent()) {
+		const int ofs = (t.mStr[0] - 'a' + 1) * 8;
+		return PushBackNode(Node{ .type = nodeType::LovalVal, .offset = ofs });
 	}
 
 	// ‚»‚¤‚Å‚È‚¯‚ê‚Î”’l‚Ì‚Í‚¸
