@@ -81,20 +81,20 @@ namespace makingAsmFile {
 
 namespace addAndSub {
 	TEST(CompilerTest, JustZero) {
-		COMPILE_AND_TEST("0", "JustZero", 0);
+		COMPILE_AND_TEST("0;", "JustZero", 0);
 	}
 
 
 	TEST(CompilerTest, SomeCalc) {
-		COMPILE_AND_TEST("1+1", "SomeCalc", 2);
+		COMPILE_AND_TEST("1+1;", "SomeCalc", 2);
 	}
 
 	TEST(CompilerTest, SomeSpace) {
-		COMPILE_AND_TEST("1 + 2", "SomeSpace", 3);
+		COMPILE_AND_TEST("1 + 2;", "SomeSpace", 3);
 	}
 
 	TEST(CompilerTest, MultipleSpace) {
-		COMPILE_AND_TEST("1 + 2 - 1 + 4", "MultipleSpace", 6);
+		COMPILE_AND_TEST("1 + 2 - 1 + 4;", "MultipleSpace", 6);
 	}
 }
 
@@ -102,56 +102,56 @@ namespace mulAndDiv {
 
 
 	TEST(CompilerTest, Mul) {
-		COMPILE_AND_TEST("2 * 2", "Mul", 4);
+		COMPILE_AND_TEST("2 * 2;", "Mul", 4);
 	}
 
 	TEST(CompilerTest, MulAndPlus) {
-		COMPILE_AND_TEST("2 * 2 + 1", "MulAndPlus", 5);
+		COMPILE_AND_TEST("2 * 2 + 1;", "MulAndPlus", 5);
 	}
 
 	TEST(CompilerTest, SimpleDiv) {
-		COMPILE_AND_TEST("2 / 2", "SimpleDiv", 1);
+		COMPILE_AND_TEST("2 / 2;", "SimpleDiv", 1);
 	}
 
 	TEST(CompilerTest, DivAndMinus) {
-		COMPILE_AND_TEST("2 / 2 - 1", "DivAndMinus", 0);
+		COMPILE_AND_TEST("2 / 2 - 1;", "DivAndMinus", 0);
 	}
 
 	TEST(CompilerTest, Priority) {
-		COMPILE_AND_TEST("2 / 2 - (1 + 1)", "Priority", -1);
+		COMPILE_AND_TEST("2 / 2 - (1 + 1);", "Priority", -1);
 	}
 
 	TEST(CompilerTest, SinglePlus) {
-		COMPILE_AND_TEST("2 * + 2", "SinglePlus", 4);
+		COMPILE_AND_TEST("2 * + 2;", "SinglePlus", 4);
 	}
 
 	TEST(CompilerTest, SingleMinus) {
-		COMPILE_AND_TEST("2 * - 2", "SingleMinus", -4);
+		COMPILE_AND_TEST("2 * - 2;", "SingleMinus", -4);
 	}
 }
 
 namespace comparison {
 	TEST(CompilerTest, Eq) {
-		COMPILE_AND_TEST("1 == 1", "Eq", 1);
+		COMPILE_AND_TEST("1 == 1;", "Eq", 1);
 	}
 
 	TEST(CompilerTest, Ne) {
-		COMPILE_AND_TEST("1 != 1", "Ne", 0);
+		COMPILE_AND_TEST("1 != 1;", "Ne", 0);
 	}
 	
 	TEST(CompilerTest, Le) {
-		COMPILE_AND_TEST("0 <= 1", "Le", 1);
+		COMPILE_AND_TEST("0 <= 1;", "Le", 1);
 	}
 	
 	TEST(CompilerTest, Lt) {
-		COMPILE_AND_TEST("1 <= 1", "Lt", 1);
+		COMPILE_AND_TEST("1 <= 1;", "Lt", 1);
 	}
 	
 	TEST(CompilerTest, Ge) {
-		COMPILE_AND_TEST("1 >= 1", "Ge", 1);
+		COMPILE_AND_TEST("1 >= 1;", "Ge", 1);
 	}
 	
 	TEST(CompilerTest, Gt) {
-		COMPILE_AND_TEST("1 > 1", "Gt", 0);
+		COMPILE_AND_TEST("1 > 1;", "Gt", 0);
 	}
 }

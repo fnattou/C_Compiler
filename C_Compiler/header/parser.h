@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <cassert>
 #include "token.h"
 using std::vector;
 
@@ -53,7 +54,7 @@ private:
 	//抽象構文木の生成文法
 	//------------------------------------------
 
-	Node* Program();
+	void Program();
 	Node* Statement();
 	Node* Expr();
 	Node* Assign();
@@ -69,4 +70,10 @@ private:
 
 	//トークンを調べて該当するノードタイプを返す
 	nodeType GetNodeType(Token& token);
+
+	bool isEndOfState() {
+		assert(mCurrentPos < mTokenTbl.size());
+		return mTokenTbl[mCurrentPos].isOperator(';');
+	}
+
 };

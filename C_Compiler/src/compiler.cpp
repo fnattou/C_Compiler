@@ -26,10 +26,17 @@ void Compiler::Compile(string src, string filename) {
 
 	//先頭の式から順にコードを生成
 	//Todo複数の式を格納したmRootNodeTblから式を生成する
-	ReadNodeTree(mParser.getLastNode());
+	for (auto* rootNode : mParser.mRootNodeTbl) {
+		ReadNodeTree(*rootNode);
+
+		//式の評価結果としてスタックに一つの値が残っているはずなので
+		//スタックが溢れないようにポップしておく
+		oss << "  pop rax\n";
+	}
 
 	//エピローグ : 最後の式の結果がRAXに残っているのでそれを返り値とする
-	oss << "  pop rax\n";
+	oss << "  mov rsp, rbp\n";
+	oss << "  pop rbp\n";
 	oss << "  ret\n";
 
 	//結果をファイルに保存
@@ -66,7 +73,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		ReadLValueNode(*node.lhs);
 		ReadNodeTree(*node.rhs);
 		oss << "  pop rdi\n";
-		oss << "  mov rax\n";
+		oss << "  pop rax\n";
 		oss << "  mov [rax], rdi\n";
 		oss << "  push rdi\n";
 		return;
@@ -156,7 +163,7 @@ void Compiler::Tokenize() {
 		}
 
 		//二文字の可能性がある場合
-		if (c == '=' || c == '<' || c == '>' || c == '!') {
+		if (c == '=' || c == '<' || c == '>' || c == '!' || c == ';') {
 			++i;
 			int len = 1;
 			if (i < mSrcStr.size() && mSrcStr[i] == '=') {

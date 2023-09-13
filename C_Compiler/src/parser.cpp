@@ -40,7 +40,7 @@ Parser::nodeType Parser::GetNodeType(Token& token) {
 	return nodeType::None;
 }
 
-Parser::Node* Parser::Program() {
+void Parser::Program() {
 	while (mCurrentPos < mTokenTbl.size()) {
 		Node* node = Statement();
 		mRootNodeTbl.push_back(node);
@@ -49,25 +49,12 @@ Parser::Node* Parser::Program() {
 
 Parser::Node* Parser::Statement() {
 	Node* node = Expr();
-	mTokenTbl.at(mCurrentPos).expect(';');
+	mTokenTbl.at(mCurrentPos++).expect(';');
 	return node;
 }
 
 Parser::Node* Parser::Expr() {
 	return Assign();
-	//Node* node = Relational();
-	//while (mCurrentPos < mTokenTbl.size()) {
-	//	switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
-	//		case nodeType::Eq:
-	//		case nodeType::Ne:
-	//			++mCurrentPos;
-	//			node = PushBackNode(Node{ type, node, Relational() });
-	//			continue;
-	//		default:
-	//			return node;
-	//	}
-	//}
-	//return node;
 }
 
 Parser::Node* Parser::Assign() {
@@ -81,10 +68,11 @@ Parser::Node* Parser::Assign() {
 
 Parser::Node* Parser::Equality() {
 	Node* node = Relational();
-	while (mCurrentPos < mTokenTbl.size()) {
+	while (!isEndOfState()) {
 		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
 		case nodeType::Eq:
 		case nodeType::Ne:
+			++mCurrentPos;
 			node = PushBackNode(Node{ type, node, Relational() });
 			continue;
 		default:
@@ -96,7 +84,7 @@ Parser::Node* Parser::Equality() {
 
 Parser::Node* Parser::Relational() {
 	Node* node = Add();
-	while (mCurrentPos < mTokenTbl.size()) {
+	while (!isEndOfState()) {
 		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
 		case nodeType::Lt:
 		case nodeType::Le:
@@ -114,7 +102,7 @@ Parser::Node* Parser::Relational() {
 
 Parser::Node* Parser::Add() {
 	Node* node = Mul();
-	while (mCurrentPos < mTokenTbl.size()) {
+	while (!isEndOfState()) {
 		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
 		case nodeType::Add:
 		case nodeType::Sub:
@@ -130,7 +118,7 @@ Parser::Node* Parser::Add() {
  
 Parser::Node* Parser::Mul() {
 	Node* node = Unary();
-	while (mCurrentPos < mTokenTbl.size()) {
+	while (!isEndOfState()) {
 		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
 		case nodeType::Mul:
 		case nodeType::Div:
@@ -142,6 +130,22 @@ Parser::Node* Parser::Mul() {
 		}
 	}
 	return node;
+}
+
+Parser::Node* Parser::Unary() {
+	switch (GetNodeType(mTokenTbl[mCurrentPos])) {
+	case nodeType::Add:
+		++mCurrentPos;
+		return Primaly();
+	case nodeType::Sub:   //’P€-‚Ì‚Æ‚«‚É‚Í0|Num‚É•ÏŠ·‚·‚é
+		++mCurrentPos;
+		{
+		Node* node = PushBackNode(Node{ nodeType::Num, nullptr, nullptr, 0 });
+		return PushBackNode(Node{ nodeType::Sub, node, Primaly() });
+		}
+	default:
+		return Primaly();
+	}
 }
 
 Parser::Node* Parser::Primaly() {
@@ -161,21 +165,6 @@ Parser::Node* Parser::Primaly() {
 	return PushBackNode(Node{ nodeType::Num, nullptr, nullptr, t.expectNumber()});
 }
 
-Parser::Node* Parser::Unary() {
-	switch (GetNodeType(mTokenTbl[mCurrentPos])) {
-	case nodeType::Add:
-		++mCurrentPos;
-		return Primaly();
-	case nodeType::Sub:   //’P€-‚Ì‚Æ‚«‚É‚Í0|Num‚É•ÏŠ·‚·‚é
-		++mCurrentPos;
-		{
-		Node* node = PushBackNode(Node{ nodeType::Num, nullptr, nullptr, 0 });
-		return PushBackNode(Node{ nodeType::Sub, node, Primaly() });
-		}
-	default:
-		return Primaly();
-	}
-}
 
 void Parser::Parse(vector<Token>& tokenTbl) {
 	mTokenTbl = tokenTbl;
@@ -183,7 +172,7 @@ void Parser::Parse(vector<Token>& tokenTbl) {
 	//‰ñ”ðô‚Æ‚µ‚Ä‘½‚ß‚É‚Æ‚Á‚Ä‚¨‚­
 	mNodeTbl.reserve(tokenTbl.size() * 10);
 	if (mTokenTbl.size() > 0) {
-		Expr();
+		Program();
 	}
 }
 
