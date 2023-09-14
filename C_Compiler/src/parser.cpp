@@ -76,7 +76,7 @@ Parser::Node* Parser::Equality() {
 			node = PushBackNode(Node{ type, node, Relational() });
 			continue;
 		default:
-			break;
+			return node;
 		}
 	}
 	return node;
