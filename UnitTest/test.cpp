@@ -171,4 +171,9 @@ namespace MultiSentence {
 	TEST(CompilerTest, MulTwoVal) {
 		COMPILE_AND_TEST("a = 5; b = 2;a * b;", "MulTwoVal", 10);
 	}
+
+
+	TEST(CompilerTest, CalcWithSomeVal) {
+		COMPILE_AND_TEST("a = 3; b = 5 * 6 - 4; a + b / 2;", "AddToVal" ,16);
+	}
 }
