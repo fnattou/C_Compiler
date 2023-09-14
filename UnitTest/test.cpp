@@ -155,3 +155,20 @@ namespace comparison {
 		COMPILE_AND_TEST("1 > 1;", "Gt", 0);
 	}
 }
+
+
+namespace localVal {
+	TEST(CompilerTest, DeclareValue) {
+		COMPILE_AND_TEST("a = 1;", "DeclareValue", 1);
+	}
+}
+
+namespace MultiSentence {
+	TEST(CompilerTest, AddToVal) {
+		COMPILE_AND_TEST("a = 1; a + 1;", "AddToVal", 2);
+	}
+
+	TEST(CompilerTest, MulTwoVal) {
+		COMPILE_AND_TEST("a = 5; b = 2;a * b;", "MulTwoVal", 10);
+	}
+}
