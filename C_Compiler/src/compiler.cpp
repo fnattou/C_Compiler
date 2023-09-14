@@ -164,9 +164,9 @@ void Compiler::Tokenize() {
 
 		//“ñ•¶š‚Ì‰Â”\«‚ª‚ ‚éê‡
 		if (c == '=' || c == '<' || c == '>' || c == '!' || c == ';') {
-			++i;
 			int len = 1;
-			if (i < mSrcStr.size() && mSrcStr[i] == '=') {
+			if (i + 1 < mSrcStr.size() && mSrcStr[i + 1] == '=') {
+				++i;
 				len = 2;
 			}
 			mTokenTbl.emplace_back(Token::TokenType::Reserved, 0, ref, len);
