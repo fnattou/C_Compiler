@@ -152,7 +152,7 @@ void Compiler::Tokenize() {
 	for (int i = 0; i < mSrcStr.size(); ++i) {
 		char* ref = &mSrcStr[i];
 		const auto c = mSrcStr[i];
-		if (isspace(c)) {
+		if (isspace(c) || c == '\r' || c == '\n') {
 			continue;
 		}
 
@@ -174,8 +174,12 @@ void Compiler::Tokenize() {
 		}
 
 		//•Ï”éŒ¾‚Ìê‡
-		if ('a' <= c && c <= 'z') {
-			mTokenTbl.emplace_back(Token::TokenType::Ident, 0, ref, 1);
+		if (isalpha(c)) {
+			int len = 1;
+			while (i + 1 < mSrcStr.size() && isalpha(mSrcStr[i + 1])) {
+				++i; ++len;
+			}
+			mTokenTbl.emplace_back(Token::TokenType::Ident, 0, ref, len);
 			continue;
 		}
 
