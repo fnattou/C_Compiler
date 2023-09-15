@@ -20,10 +20,10 @@ Parser::nodeType Parser::GetNodeType(Token& token) {
 		return nodeType::Div;
 	}
 	else if (token.isOperator('>')) {
-		return nodeType::Lt;
+		return nodeType::Gt;
 	}
 	else if (token.isOperator('<')) {
-		return nodeType::Gt;
+		return nodeType::Lt;
 	}
 	else if (token.isOperator("<=")) {
 		return nodeType::Le;

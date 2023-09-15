@@ -50,7 +50,7 @@ struct Token
 	}
 
 	bool isOperator(const char* str) const {
-		return mType == Token::TokenType::Reserved && mStr.size() == 2 && mStr.compare({ str, mStr.size()});
+		return mType == Token::TokenType::Reserved && mStr.size() == 2 && mStr.compare({ str, mStr.size()}) == 0;
 	}
 };
 
