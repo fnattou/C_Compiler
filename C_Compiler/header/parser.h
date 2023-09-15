@@ -1,8 +1,11 @@
 #pragma once
 #include <vector>
 #include <cassert>
+#include <unordered_map>
 #include "token.h"
 using std::vector;
+using std::string_view;
+using std::unordered_map;
 
 //入力されたトークン列を解析して抽象構文木を作成するクラス
 class Parser {
@@ -33,6 +36,9 @@ public:
 		int offset; //typeがLocalValの時だけ使う
 	};
 
+	// ローカル変数の情報を保存するための型
+	unordered_map<string_view, int> mLValMap;
+	
 	vector<Node> mNodeTbl;
 	vector<Node*> mRootNodeTbl;
 	size_t mCurrentPos;
@@ -41,6 +47,11 @@ public:
 	Node& getLastNode() {
 		return mNodeTbl[mNodeTbl.size() - 1];
 	}
+
+	int getTotalBytesOfLVal() {
+		return mLValMap.size() * 8;
+	}
+
 
 	Parser()
 		:mNodeTbl()

@@ -19,13 +19,12 @@ void Compiler::Compile(string src, string filename) {
 	oss << ".globl main\n";
 	oss << "main:" << std::endl;
 
-	//プロローグ : 変数26個分の領域を確保する
+	//プロローグ : 宣言された変数分の領域を確保する
 	oss << "  push rbp\n";
 	oss << "  mov rbp, rsp\n";
-	oss << "  sub rsp, 208\n";
+	oss << "  sub rsp, " << mParser.getTotalBytesOfLVal() << "\n";
 
 	//先頭の式から順にコードを生成
-	//Todo複数の式を格納したmRootNodeTblから式を生成する
 	for (auto* rootNode : mParser.mRootNodeTbl) {
 		ReadNodeTree(*rootNode);
 

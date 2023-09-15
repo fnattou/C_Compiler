@@ -157,8 +157,14 @@ Parser::Node* Parser::Primaly() {
 		return node;
 	}
 	else if (t.isIdent()) {
-		const int ofs = (t.mStr[0] - 'a' + 1) * 8;
-		return PushBackNode(Node{ .type = nodeType::LovalVal, .offset = ofs });
+		if (mLValMap.contains(t.mStr)) {
+			return PushBackNode(Node{ .type = nodeType::LovalVal, .offset =  mLValMap.at(t.mStr)});
+		}
+		else {
+			const int ofs = (mLValMap.size() + 1) * 8;
+			mLValMap.emplace(t.mStr, ofs);
+			return PushBackNode(Node{ .type = nodeType::LovalVal, .offset = ofs });
+		}
 	}
 
 	// ÇªÇ§Ç≈Ç»ÇØÇÍÇŒêîílÇÃÇÕÇ∏
