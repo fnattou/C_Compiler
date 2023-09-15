@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+using std::string_view;
 
 struct Token
 {
@@ -12,13 +13,12 @@ struct Token
 	};
 	TokenType mType; //トークンの種類
 	int mVal;        //種類が整数の場合、その数値
-	char* mStr;      //トークン文字列
-	int mLen;         //トークン文字列の長さ
+	string_view mStr;      //トークン文字列
 
 	Token() = default;
 
 	Token(TokenType type, int num, char* str, int len)
-		:mType(type), mVal(num), mStr(str), mLen(len)
+		:mType(type), mVal(num), mStr(str, len)
 	{
 	}
 
@@ -46,11 +46,11 @@ struct Token
 	}
 
 	bool isOperator(char op) const {
-		return mType == Token::TokenType::Reserved && mLen == 1 && mStr[0] == op;
+		return mType == Token::TokenType::Reserved && mStr.size() == 1 && mStr[0] == op;
 	}
 
 	bool isOperator(const char* str) const {
-		return mType == Token::TokenType::Reserved && mLen == 2 && !memcmp(mStr, str, mLen);
+		return mType == Token::TokenType::Reserved && mStr.size() == 2 && mStr.compare({ str, mStr.size()});
 	}
 };
 
