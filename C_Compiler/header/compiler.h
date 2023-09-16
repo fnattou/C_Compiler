@@ -30,6 +30,11 @@ private:
 	//¶•Ó’l‚Æ‚µ‚Äƒm[ƒh‚ğ“Ç‚İ‚±‚Ş
 	void ReadLValueNode(Parser::Node& node);
 
+	//i < mSrcStr.size()
+	bool isValidIdx(int i) {
+		return i < mSrcStr.size();
+	}
+
 	string mSrcStr;
 	std::ostringstream oss;
 	std::vector<Token> mTokenTbl;

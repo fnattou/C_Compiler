@@ -9,6 +9,7 @@ struct Token
 		Reserved, //記号
 		Num,      //整数
 		Ident,    //識別子
+		Return,   //returen宣言
 		Eof,      //入力の終わり
 	};
 	TokenType mType; //トークンの種類
@@ -43,6 +44,10 @@ struct Token
 
 	bool at_eof() const {
 		return mType == Token::TokenType::Eof;
+	}
+	
+	bool isReturn() const {
+		return mType == Token::TokenType::Return;
 	}
 
 	bool isOperator(char op) const {

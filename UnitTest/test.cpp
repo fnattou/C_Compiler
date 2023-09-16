@@ -185,3 +185,17 @@ namespace MultiSentence {
 			"LongNameLval" ,6);
 	}
 }
+
+namespace returnTest {
+	TEST(CompilerTest, ReturnAValue) {
+		COMPILE_AND_TEST("return 10;", "ReturnAValue" ,10);
+	}
+
+	TEST(CompilerTest, ReturnSomeCalc) {
+		const auto src =
+			"a = 1;"
+			"b = 2 * 3;"
+			"return a + b;";
+		COMPILE_AND_TEST(src, "ReturnSomeCalc", 7);
+	}
+}

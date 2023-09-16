@@ -48,7 +48,14 @@ void Parser::Program() {
 }
 
 Parser::Node* Parser::Statement() {
-	Node* node = Expr();
+	Node* node;
+	if (mTokenTbl.at(mCurrentPos).isReturn()) {
+		++mCurrentPos;
+		node = PushBackNode({ .type = nodeType::Return, .lhs = Expr() });
+	}
+	else {
+		node = Expr();
+	}
 	mTokenTbl.at(mCurrentPos++).expect(';');
 	return node;
 }

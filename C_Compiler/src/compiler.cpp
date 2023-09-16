@@ -77,10 +77,18 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		oss << "  push rdi\n";
 		return;
 	case Type::LovalVal:
+
 		ReadLValueNode(node);
 		oss << "  pop rax\n";
 		oss << "  mov rax, [rax]\n";
 		oss << "  push rax\n";
+		return;
+	case Type::Return:
+		ReadNodeTree(*node.lhs);
+		oss << "  pop rax\n";
+		oss << "  mov rsp, rbp\n";
+		oss << "  pop rbp\n";
+		oss << "  ret\n";
 		return;
 	default:
 		break;
@@ -164,7 +172,7 @@ void Compiler::Tokenize() {
 		//二文字の可能性がある場合
 		if (c == '=' || c == '<' || c == '>' || c == '!' || c == ';') {
 			int len = 1;
-			if (i + 1 < mSrcStr.size() && mSrcStr[i + 1] == '=') {
+			if (isValidIdx(i + 1) && mSrcStr[i + 1] == '=') {
 				++i;
 				len = 2;
 			}
@@ -172,10 +180,23 @@ void Compiler::Tokenize() {
 			continue;
 		}
 
+		//returnの場合
+		//毎ループmemcmpしてると遅そうなので、最初の文字だけで予め判定する
+		if (c == 'r') {
+			if (isValidIdx(i + 5) && memcmp(ref, "return", 5) == 0) {
+				//returnxのような場合を除く
+				if (isValidIdx(i + 6) && !isalnum(mSrcStr[i + 6])) {
+					mTokenTbl.emplace_back(Token::TokenType::Return, 0, ref, 6);
+					i += 5;
+					continue;
+				}
+			}
+		}
+
 		//変数宣言の場合
 		if (isalpha(c)) {
 			int len = 1;
-			while (i + 1 < mSrcStr.size() && isalpha(mSrcStr[i + 1])) {
+			while (isValidIdx(i + 1) && isalpha(mSrcStr[i + 1])) {
 				++i; ++len;
 			}
 			mTokenTbl.emplace_back(Token::TokenType::Ident, 0, ref, len);
@@ -192,6 +213,7 @@ void Compiler::Tokenize() {
 			mTokenTbl.emplace_back(Token::TokenType::Num, j, ref, 1);
 			continue;
 		}
+
 		error_at(i, "トークナイズできません");
 	}
 }
