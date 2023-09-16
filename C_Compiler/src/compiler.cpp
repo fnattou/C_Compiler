@@ -8,7 +8,7 @@ Compiler::Compiler()
  
 }
 
-void Compiler::Compile(string src, string filename) {
+void Compiler::Compile(string_view src, string filename) {
 	//トークナイズ、パースを行い、抽象構文木を作成する
 	mSrcStr = src;
 	Tokenize();

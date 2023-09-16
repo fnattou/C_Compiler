@@ -11,7 +11,7 @@ class Compiler
 public:
 	Compiler();
 	~Compiler(){}
-	void Compile(string src, string filename);
+	void Compile(string_view src, string filename);
 
 private:
 	void OutputFile(string filename);
