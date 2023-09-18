@@ -13,7 +13,7 @@ public:
 	enum class nodeType {
 		Expr,
 		Assign,  // = 
-		LovalVal,
+		LocalVal,
 		//Ž¯•ÊŽq‚Æ‚ÌŒ©•ª‚¯‚Ì‚½‚ß‚É_‚ð’Ç‰Á‚µ‚Ä‚¢‚é
 		If_,
 		For_,

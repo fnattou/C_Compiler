@@ -204,12 +204,12 @@ Parser::Node* Parser::Primaly() {
 	}
 	else if (t.isIdent()) {
 		if (mLValMap.contains(t.mStr)) {
-			return PushBackNode(Node{ .type = nodeType::LovalVal, .offset =  mLValMap.at(t.mStr)});
+			return PushBackNode(Node{ .type = nodeType::LocalVal, .offset =  mLValMap.at(t.mStr)});
 		}
 		else {
 			const int ofs = (mLValMap.size() + 1) * 8;
 			mLValMap.emplace(t.mStr, ofs);
-			return PushBackNode(Node{ .type = nodeType::LovalVal, .offset = ofs });
+			return PushBackNode(Node{ .type = nodeType::LocalVal, .offset = ofs });
 		}
 	}
 

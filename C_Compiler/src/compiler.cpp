@@ -53,7 +53,7 @@ void Compiler::OutputFile(string filename) {
 
 void Compiler::ReadLValueNode(Parser::Node& node) {
 	using Node = Parser::Node; using Type = Parser::nodeType;
-	if (node.type != Type::LovalVal) {
+	if (node.type != Type::LocalVal) {
 		std::cerr << "‘ã“ü‚Ì¶•Ó’l‚ª•Ï”‚Å‚Í‚ ‚è‚Ü‚¹‚ñ";
 	}
 
@@ -78,7 +78,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		oss << "  mov [rax], rdi\n";
 		oss << "  push rdi\n";
 		return;
-	case Type::LovalVal:
+	case Type::LocalVal:
 
 		ReadLValueNode(node);
 		oss << "  pop rax\n";
