@@ -199,3 +199,38 @@ namespace returnTest {
 		COMPILE_AND_TEST(src, "ReturnSomeCalc", 7);
 	}
 }
+
+
+namespace branchTest {
+	TEST(CompilerTest, IfTest) {
+		const auto src =
+			"if ( 0 < 1 )"
+			"10;";
+		COMPILE_AND_TEST(src, "IfTest", 10);
+	}
+
+	TEST(CompilerTest, IfAndElse) {
+		const auto src =
+			"if ( 0 > 1 ) 2; "
+			"else 10;";
+		COMPILE_AND_TEST(src, " IfAndElse", 10);
+	}
+
+	TEST(CompilerTest, whileTest) {
+		const auto src =
+			"a = 1;"
+			"while ( a < 10 ) a = a + 1; "
+			"return a;";
+		COMPILE_AND_TEST(src, " whileTest", 10);
+	}
+
+
+	TEST(CompilerTest, ForTest) {
+		const auto src =
+			"a = 0;"
+			"for (i = 1; i <= 10; i = i + 1 )"
+			"a = a + i";
+		COMPILE_AND_TEST(src, " ForTest", 55);
+	}
+
+}
