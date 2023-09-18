@@ -49,14 +49,53 @@ void Parser::Program() {
 
 Parser::Node* Parser::Statement() {
 	Node* node;
-	if (mTokenTbl.at(mCurrentPos).isReturn()) {
+	const Token& t = getCurTk();
+	const auto expectAndNext = [&](char c) { getCurTk().expect(c); ++mCurrentPos; };
+	if (t.isReturn()) {
 		++mCurrentPos;
 		node = PushBackNode({ .type = nodeType::Return, .lhs = Expr() });
 	}
+	// if ( lhs ) middle  else ( rhs )
+	else if (t.isReserved("if")) {
+		++mCurrentPos;
+		Node n{ .type = nodeType::If_ };
+		expectAndNext('(');
+		n.lhs = Expr();
+		expectAndNext(')');
+		n.middle = Statement();
+		if (mCurrentPos < mTokenTbl.size() && getCurTk().isReserved("else")) {
+			++mCurrentPos;
+			n.rhs = Statement();
+		}
+		node = PushBackNode(n);
+	}
+	// for ( lhs ; middle ; rhs ) { statement }
+	else if (t.isReserved("for")) {
+		++mCurrentPos;
+		Node n{ .type = nodeType::For_ };
+		const auto readExprIf = [&](Node* n, char c) {
+			if (!mTokenTbl[mCurrentPos + 1].isOperator(c)) {
+				n = Expr();
+			}
+			expectAndNext(c);
+		};
+
+		expectAndNext('(');
+		readExprIf(n.lhs, ';');
+		readExprIf(n.middle, ';');
+		readExprIf(n.rhs, ')');
+		node = PushBackNode(n);
+	}
+	else if (t.isReserved("while")) {
+		expectAndNext('(');
+		node = PushBackNode({ .type = nodeType::While_, .lhs = Expr() });
+		expectAndNext(')');
+		node->rhs = Statement();
+	}
 	else {
 		node = Expr();
+		expectAndNext(';');
 	}
-	mTokenTbl.at(mCurrentPos++).expect(';');
 	return node;
 }
 
@@ -175,7 +214,7 @@ Parser::Node* Parser::Primaly() {
 	}
 
 	// ÇªÇ§Ç≈Ç»ÇØÇÍÇŒêîílÇÃÇÕÇ∏
-	return PushBackNode(Node{ nodeType::Num, nullptr, nullptr, t.expectNumber()});
+	return PushBackNode(Node{ .type = nodeType::Num, .val = t.expectNumber()});
 }
 
 

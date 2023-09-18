@@ -22,7 +22,7 @@ private:
 	/// <param name="src">入力文字列</param>
 	void Tokenize();
 
-	void error_at(int pos, const char* fmt...) const;
+	void error_at(size_t pos, const char* fmt...) const;
 
 	//パース後の抽象構文木を読み込んで、コードを作成する
 	void ReadNodeTree(Parser::Node& node);
@@ -31,13 +31,13 @@ private:
 	void ReadLValueNode(Parser::Node& node);
 
 	//i < mSrcStr.size()
-	bool isValidIdx(int i) {
+	bool isValidIdx(size_t i) {
 		return i < mSrcStr.size();
 	}
 
 	string mSrcStr;
 	std::ostringstream oss;
 	std::vector<Token> mTokenTbl;
-	size_t mCurrentPos;
+	size_t mCurrentRootNodeIdx;
 	Parser mParser;
 };

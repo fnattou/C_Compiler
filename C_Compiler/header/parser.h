@@ -14,6 +14,10 @@ public:
 		Expr,
 		Assign,  // = 
 		LovalVal,
+		//識別子との見分けのために_を追加している
+		If_,
+		For_,
+		While_,
 		Add,
 		Sub,
 		Mul,
@@ -33,6 +37,7 @@ public:
 		nodeType type;
 		Node* lhs;
 		Node* rhs;
+		Node* middle; //typeがforの時だけ使う
 		int val; //typeがNumのときだけ使う
 		int offset; //typeがLocalValの時だけ使う
 	};
@@ -42,14 +47,13 @@ public:
 	
 	vector<Node> mNodeTbl;
 	vector<Node*> mRootNodeTbl;
-	size_t mCurrentPos;
-	vector<Token> mTokenTbl;
+
 
 	Node& getLastNode() {
 		return mNodeTbl[mNodeTbl.size() - 1];
 	}
 
-	int getTotalBytesOfLVal() {
+	size_t getTotalBytesOfLVal() {
 		return mLValMap.size() * 8;
 	}
 
@@ -66,7 +70,13 @@ private:
 	//抽象構文木の生成文法
 	//------------------------------------------
 	//program	 = statement*
-	//statement	 = expr ";" | "return" expr ";"
+	//statement	 = expr ";"
+	//			| "if" "(" expr ")" statement ( "else" stmt )?
+	//			| "while" "(" expr ")" statement
+	//			| "for" "(" expr? ";" expr? ";" expr? ")" statement
+	//			| "return" expr ";"
+
+
 	//expr		 = assign
 	//assign	 = equality ( "=" assign)?
 	//equality   = relational ("==" relational | "!=" relational)*
@@ -94,8 +104,13 @@ private:
 	nodeType GetNodeType(Token& token);
 
 	bool isEndOfState() {
-		assert(mCurrentPos < mTokenTbl.size());
+		assert(mCurrentPos < mTokenTbl.size(), "文末に\";\"がない可能性があります");
 		return mTokenTbl[mCurrentPos].isOperator(';');
 	}
 
+	vector<Token> mTokenTbl;
+	size_t mCurrentPos;
+	const Token& getCurTk() {
+		return mTokenTbl[mCurrentPos];
+	}
 };

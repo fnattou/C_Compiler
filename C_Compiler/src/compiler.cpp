@@ -3,7 +3,7 @@
 #include <stdarg.h>
 Compiler::Compiler()
 	:mTokenTbl()
-	,mCurrentPos(0)
+	,mCurrentRootNodeIdx(0)
 {
  
 }
@@ -25,12 +25,13 @@ void Compiler::Compile(string_view src, string filename) {
 	oss << "  sub rsp, " << mParser.getTotalBytesOfLVal() << "\n";
 
 	//先頭の式から順にコードを生成
-	for (auto* rootNode : mParser.mRootNodeTbl) {
-		ReadNodeTree(*rootNode);
+	while (mCurrentRootNodeIdx <  mParser.mRootNodeTbl.size()) {
+		ReadNodeTree(*mParser.mRootNodeTbl.at(mCurrentRootNodeIdx));
 
 		//式の評価結果としてスタックに一つの値が残っているはずなので
 		//スタックが溢れないようにポップしておく
 		oss << "  pop rax\n";
+		++mCurrentRootNodeIdx;
 	}
 
 	//エピローグ : 最後の式の結果がRAXに残っているのでそれを返り値とする
@@ -63,6 +64,7 @@ void Compiler::ReadLValueNode(Parser::Node& node) {
 
 void Compiler::ReadNodeTree(Parser::Node& node) {
 	using Node = Parser::Node; using Type = Parser::nodeType;
+	static int labelNum = 0;
 	switch (node.type) 
 	{
 	case Type::Num:
@@ -90,6 +92,59 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		oss << "  pop rbp\n";
 		oss << "  ret\n";
 		return;
+	case Type::If_: {
+		int ifLabelNum = labelNum;
+		ReadNodeTree(*node.lhs);
+		oss << "  pop rax\n";
+		oss << "  cmp rax, 0\n";
+		oss << "  je .LElse" << ifLabelNum << "\n";
+		ReadNodeTree(*node.middle);
+		oss << "  je .LEnd" << ifLabelNum << "\n";
+		oss << ".LElse" << ifLabelNum << ":\n";
+		if (node.rhs) {
+			ReadNodeTree(*node.rhs);
+		}
+		oss << ".LEnd" << ifLabelNum << ":\n";
+		++labelNum;
+		return;
+	}
+	case Type::For_: {
+		int forLabelNum = labelNum;
+		if (node.lhs) {
+			ReadNodeTree(*node.lhs);
+		}
+		oss << ".LBegin" << forLabelNum << ":\n";
+		if (node.middle) {
+			ReadNodeTree(*node.middle);
+		}
+		else {
+			oss << "  push 1\n";
+		}
+		oss << "  pop rax\n";
+		oss << "  cmp rax, 0\n";
+		oss << "  je .LEnd" << forLabelNum << "\n";
+		ReadNodeTree(*mParser.mRootNodeTbl.at(++mCurrentRootNodeIdx));
+		if (node.rhs) {
+			ReadNodeTree(*node.rhs);
+				}
+		oss << "  jmp .LBegin" << forLabelNum << "\n";
+		oss << ".LEnd" << forLabelNum << ":\n";
+		++labelNum;
+		return;
+	}
+	case Type::While_: {
+		int whileLabelNum = labelNum;
+		oss << ".LBegin" << whileLabelNum << ":\n";
+		ReadNodeTree(*node.lhs);
+		oss << "  pop rax\n";
+		oss << "  cmp rax, 0\n";
+		oss << "  je .LEnd" << whileLabelNum << "\n";
+		ReadNodeTree(*node.rhs);
+		oss << "  jmp .LBegin" << whileLabelNum << ":\n";
+		oss << ".LEnd" << whileLabelNum << ":\n";
+		++labelNum;
+		return;
+	}
 	default:
 		break;
 	}
@@ -156,42 +211,58 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 
 void Compiler::Tokenize() {
 	mTokenTbl.reserve(100);
-	for (int i = 0; i < mSrcStr.size(); ++i) {
+	using TokenType = Token::TokenType;
+	for (size_t i = 0; i < mSrcStr.size(); ++i) {
 		char* ref = &mSrcStr[i];
 		const auto c = mSrcStr[i];
 		if (isspace(c) || c == '\r' || c == '\n') {
 			continue;
 		}
 
+		//演算子または文末の場合
 		if (c == '+' || c == '-' || c == '*' || c == '/'
-			|| c == '(' || c == ')') {
-			mTokenTbl.emplace_back(Token::TokenType::Reserved, 0, ref, 1);
+			|| c == '(' || c == ')'|| c == ';') {
+			mTokenTbl.emplace_back(TokenType::Reserved, 0, ref, 1);
 			continue;
 		}
-
-		//二文字の可能性がある場合
-		if (c == '=' || c == '<' || c == '>' || c == '!' || c == ';') {
+		//演算子で二文字の可能性がある場合
+		if (c == '=' || c == '<' || c == '>' || c == '!') {
 			int len = 1;
 			if (isValidIdx(i + 1) && mSrcStr[i + 1] == '=') {
 				++i;
 				len = 2;
 			}
-			mTokenTbl.emplace_back(Token::TokenType::Reserved, 0, ref, len);
+			mTokenTbl.emplace_back(TokenType::Reserved, 0, ref, len);
 			continue;
 		}
 
-		//returnの場合
-		//毎ループmemcmpしてると遅そうなので、最初の文字だけで予め判定する
-		if (c == 'r') {
-			if (isValidIdx(i + 5) && memcmp(ref, "return", 5) == 0) {
-				//returnxのような場合を除く
-				if (isValidIdx(i + 6) && !isalnum(mSrcStr[i + 6])) {
-					mTokenTbl.emplace_back(Token::TokenType::Return, 0, ref, 6);
-					i += 5;
-					continue;
+		//予約語か判断する関数
+		const auto checkWord = [&](string_view sv) { 
+			//先に頭一文字だけ判定
+			if (c != sv[0]) {
+				return false;
+			}
+			if (isValidIdx(i + sv.size() - 1) && memcmp(ref, sv.data(), sv.size()) == 0) {
+				//予約語の次が文字である場合は変数宣言になる。例　returnHoge, if3, forcast
+				if (isValidIdx(i + sv.size()) && isalnum(mSrcStr[i + sv.size()])) {
+					return false;
 				}
+				return true;
+			}
+			return false;
+		};
+		//予約語の場合。変数宣言より先に判断する
+		bool isContinue = false;
+		for (string_view str : {"return", "if", "while", "for" }) {
+			if (checkWord(str)) {
+				const auto type = (str == "return") ? TokenType::Return : TokenType::Reserved;
+				mTokenTbl.emplace_back(type, 0,  ref, str.size());
+				//次のループの先頭でまた++iが行われるので、ここではsize - 1を足す
+				i += str.size() - 1;
+				isContinue = true; break;
 			}
 		}
+		if (isContinue) continue;
 
 		//変数宣言の場合
 		if (isalpha(c)) {
@@ -199,10 +270,11 @@ void Compiler::Tokenize() {
 			while (isValidIdx(i + 1) && isalpha(mSrcStr[i + 1])) {
 				++i; ++len;
 			}
-			mTokenTbl.emplace_back(Token::TokenType::Ident, 0, ref, len);
+			mTokenTbl.emplace_back(TokenType::Ident, 0, ref, len);
 			continue;
 		}
 
+		//数値の場合
 		if (isdigit(c)) {
 			char* endptr;
 			int j = strtol(ref, &endptr, 10);
@@ -210,7 +282,7 @@ void Compiler::Tokenize() {
 				++i;
 			}
 
-			mTokenTbl.emplace_back(Token::TokenType::Num, j, ref, 1);
+			mTokenTbl.emplace_back(TokenType::Num, j, ref, 1);
 			continue;
 		}
 
@@ -219,10 +291,10 @@ void Compiler::Tokenize() {
 }
 
 
-void Compiler::error_at(int pos, const char* fmt...) const {
+void Compiler::error_at(size_t pos, const char* fmt...) const {
 
 	fprintf(stderr, "%s\n", mSrcStr.c_str());
-	fprintf(stderr, "%*s", pos, " "); //pos個の空白を出力
+	fprintf(stderr, "%*s", static_cast<int>(pos), " "); //pos個の空白を出力
 	fprintf(stderr, "^ "); //エラーの出た目印を入力
 
 	//エラーメッセージ出力

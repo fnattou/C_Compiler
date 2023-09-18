@@ -9,7 +9,7 @@ struct Token
 		Reserved, //記号
 		Num,      //整数
 		Ident,    //識別子
-		Return,   //returen宣言
+		Return,   //retun宣言
 		Eof,      //入力の終わり
 	};
 	TokenType mType; //トークンの種類
@@ -18,7 +18,7 @@ struct Token
 
 	Token() = default;
 
-	Token(TokenType type, int num, char* str, int len)
+	Token(TokenType type, int num, char* str, size_t len)
 		:mType(type), mVal(num), mStr(str, len)
 	{
 	}
@@ -45,7 +45,7 @@ struct Token
 	bool at_eof() const {
 		return mType == Token::TokenType::Eof;
 	}
-	
+
 	bool isReturn() const {
 		return mType == Token::TokenType::Return;
 	}
@@ -56,6 +56,10 @@ struct Token
 
 	bool isOperator(const char* str) const {
 		return mType == Token::TokenType::Reserved && mStr.size() == 2 && mStr.compare({ str, mStr.size()}) == 0;
+	}
+
+	bool isReserved(const string_view sv) const {
+		return mType == TokenType::Reserved && mStr.size() == sv.size() && mStr.compare(sv) == 0;
 	}
 };
 
