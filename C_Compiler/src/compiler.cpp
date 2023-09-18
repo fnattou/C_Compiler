@@ -99,7 +99,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		oss << "  cmp rax, 0\n";
 		oss << "  je .LElse" << ifLabelNum << "\n";
 		ReadNodeTree(*node.middle);
-		oss << "  je .LEnd" << ifLabelNum << "\n";
+		oss << "  jmp .LEnd" << ifLabelNum << "\n";
 		oss << ".LElse" << ifLabelNum << ":\n";
 		if (node.rhs) {
 			ReadNodeTree(*node.rhs);
@@ -126,7 +126,9 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		ReadNodeTree(*mParser.mRootNodeTbl.at(++mCurrentRootNodeIdx));
 		if (node.rhs) {
 			ReadNodeTree(*node.rhs);
-				}
+			//—]Œv‚Éˆê‰ñpush‚µ‚Ä‚¢‚é‚Ì‚Å‚±‚±‚Åpop‚µ‚Ä‚¨‚­
+			oss << "  pop rax\n";
+		}
 		oss << "  jmp .LBegin" << forLabelNum << "\n";
 		oss << ".LEnd" << forLabelNum << ":\n";
 		++labelNum;
@@ -140,7 +142,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		oss << "  cmp rax, 0\n";
 		oss << "  je .LEnd" << whileLabelNum << "\n";
 		ReadNodeTree(*node.rhs);
-		oss << "  jmp .LBegin" << whileLabelNum << ":\n";
+		oss << "  jmp .LBegin" << whileLabelNum << "\n";
 		oss << ".LEnd" << whileLabelNum << ":\n";
 		++labelNum;
 		return;
@@ -253,7 +255,7 @@ void Compiler::Tokenize() {
 		};
 		//—\–ñŒê‚Ìê‡B•Ï”éŒ¾‚æ‚èæ‚É”»’f‚·‚é
 		bool isContinue = false;
-		for (string_view str : {"return", "if", "while", "for" }) {
+		for (string_view str : {"return", "if", "while", "for", "else" }) {
 			if (checkWord(str)) {
 				const auto type = (str == "return") ? TokenType::Return : TokenType::Reserved;
 				mTokenTbl.emplace_back(type, 0,  ref, str.size());
