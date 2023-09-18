@@ -64,6 +64,8 @@ void Compiler::ReadLValueNode(Parser::Node& node) {
 
 void Compiler::ReadNodeTree(Parser::Node& node) {
 	using Node = Parser::Node; using Type = Parser::nodeType;
+
+	//ë„ì¸ÅAêßå‰ï∂ÅAreturnï∂Ç»Ç«
 	static int labelNum = 0;
 	switch (node.type) 
 	{
@@ -163,6 +165,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 	oss << "  pop rdi\n";
 	oss << "  pop rax\n";
 
+	//ìÒçÄââéZéqÇÃèÍçá
 	switch (node.type) {
 	case Type::Add:
 		oss << "  add rax, rdi\n";
