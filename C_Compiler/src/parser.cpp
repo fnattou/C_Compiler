@@ -49,6 +49,9 @@ Parser::nodeType Parser::GetNodeType(const Token& token) const {
 	else if (token.isReturn()) {
 		return nodeType::Return;
 	}
+	else if (token.isReserved('{')) {
+		return nodeType::Block;
+	}
 	return nodeType::None;
 }
 
@@ -109,6 +112,15 @@ Parser::Node* Parser::Statement() {
 		expectAndNext(')');
 		node->rhs = Statement();
 		break;
+	case nodeType::Block: {
+		++mCurrentPos;
+		Node n{ .type = type };
+		while (!getCurTk().isReserved('}')) {
+			n.innerBlockNodeTbl.push_back(Statement());
+		}
+		expectAndNext('}');
+		node = PushBackNode(n);
+	}
 	default:
 		node = Expr();
 		expectAndNext(';');

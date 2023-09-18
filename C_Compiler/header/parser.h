@@ -18,6 +18,7 @@ public:
 		If_,
 		For_,
 		While_,
+		Block,
 		Add,
 		Sub,
 		Mul,
@@ -40,7 +41,9 @@ public:
 		Node* middle; //typeがforの時だけ使う
 		int val; //typeがNumのときだけ使う
 		int offset; //typeがLocalValの時だけ使う
+		vector<Node*> innerBlockNodeTbl; // typeがBlockの時だけ使う
 	};
+
 
 	// ローカル変数の情報を保存するための型
 	unordered_map<string_view, int> mLValMap;

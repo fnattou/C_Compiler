@@ -149,6 +149,12 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		++labelNum;
 		return;
 	}
+	case Type::Block: {
+		for (auto* innerNode : node.innerBlockNodeTbl) {
+			ReadNodeTree(*innerNode);
+			oss << "  pop rax\n";
+		}
+	}
 	default:
 		break;
 	}
