@@ -161,6 +161,10 @@ namespace localVal {
 	TEST(CompilerTest, DeclareValue) {
 		COMPILE_AND_TEST("a = 1;", "DeclareValue", 1);
 	}
+
+	TEST(CompilerTest, DeclareValueAndAdd) {
+		COMPILE_AND_TEST("a = 1; a = a + 1;", "DeclareValueAndAdd",2);
+	}
 }
 
 namespace MultiSentence {
@@ -213,7 +217,7 @@ namespace branchTest {
 		const auto src =
 			"if ( 0 > 1 ) 2; "
 			"else 10;";
-		COMPILE_AND_TEST(src, " IfAndElse", 10);
+		COMPILE_AND_TEST(src, "IfAndElse", 10);
 	}
 
 	TEST(CompilerTest, whileTest) {
@@ -221,7 +225,7 @@ namespace branchTest {
 			"a = 1;"
 			"while ( a < 10 ) a = a + 1; "
 			"return a;";
-		COMPILE_AND_TEST(src, " whileTest", 10);
+		COMPILE_AND_TEST(src, "WhileTest", 10);
 	}
 
 
@@ -229,8 +233,8 @@ namespace branchTest {
 		const auto src =
 			"a = 0;"
 			"for (i = 1; i <= 10; i = i + 1 )"
-			"a = a + i";
-		COMPILE_AND_TEST(src, " ForTest", 55);
+			"a = a + i;";
+		COMPILE_AND_TEST(src, "ForTest", 55);
 	}
 
 }
