@@ -238,3 +238,18 @@ namespace branchTest {
 	}
 
 }
+
+
+namespace blockstate {
+	TEST(CompilerTest,  BlockWithFor) {
+		const auto src =
+			"a = 2;"
+			"for (i = 1; i <= 10; i = i + 1 )"
+			"{"
+			"	a = a + i;"
+			"	a = a - i;"
+			"}"
+			"return a;";
+		COMPILE_AND_TEST(src, "BlockWithFor", 2);
+	}
+}

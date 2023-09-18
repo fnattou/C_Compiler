@@ -154,6 +154,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 			ReadNodeTree(*innerNode);
 			oss << "  pop rax\n";
 		}
+		return;
 	}
 	default:
 		break;
@@ -226,13 +227,13 @@ void Compiler::Tokenize() {
 	for (size_t i = 0; i < mSrcStr.size(); ++i) {
 		char* ref = &mSrcStr[i];
 		const auto c = mSrcStr[i];
-		if (isspace(c) || c == '\r' || c == '\n') {
+		if (isspace(c) || c == '\r' || c == '\n' || c == '\t') {
 			continue;
 		}
 
 		//‰‰ŽZŽq‚Ü‚½‚Í•¶––‚Ìê‡
 		if (c == '+' || c == '-' || c == '*' || c == '/'
-			|| c == '(' || c == ')'|| c == ';') {
+			|| c == '(' || c == ')'|| c == ';' || c == '{' || c == '}') {
 			mTokenTbl.emplace_back(TokenType::Reserved, 0, ref, 1);
 			continue;
 		}

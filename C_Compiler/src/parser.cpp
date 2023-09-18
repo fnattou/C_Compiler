@@ -120,6 +120,7 @@ Parser::Node* Parser::Statement() {
 		}
 		expectAndNext('}');
 		node = PushBackNode(n);
+		break;
 	}
 	default:
 		node = Expr();
