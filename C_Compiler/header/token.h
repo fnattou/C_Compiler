@@ -50,12 +50,8 @@ struct Token
 		return mType == Token::TokenType::Return;
 	}
 
-	bool isOperator(char op) const {
+	bool isReserved(char op) const {
 		return mType == Token::TokenType::Reserved && mStr.size() == 1 && mStr[0] == op;
-	}
-
-	bool isOperator(const char* str) const {
-		return mType == Token::TokenType::Reserved && mStr.size() == 2 && mStr.compare({ str, mStr.size()}) == 0;
 	}
 
 	bool isReserved(const string_view sv) const {

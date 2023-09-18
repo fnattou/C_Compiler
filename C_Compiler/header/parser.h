@@ -75,6 +75,7 @@ private:
 	//			| "while" "(" expr ")" statement
 	//			| "for" "(" expr? ";" expr? ";" expr? ")" statement
 	//			| "return" expr ";"
+	//			| "{" statement* "}"
 
 
 	//expr		 = assign
@@ -101,11 +102,11 @@ private:
 	Node* PushBackNode(Node n);
 
 	//トークンを調べて該当するノードタイプを返す
-	nodeType GetNodeType(Token& token);
+	nodeType GetNodeType(const Token& token) const ;
 
 	bool isEndOfState() {
-		assert(mCurrentPos < mTokenTbl.size(), "文末に\";\"がない可能性があります");
-		return mTokenTbl[mCurrentPos].isOperator(';');
+		assert(mCurrentPos < mTokenTbl.size());
+		return mTokenTbl[mCurrentPos].isReserved(';');
 	}
 
 	vector<Token> mTokenTbl;

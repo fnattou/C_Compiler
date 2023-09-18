@@ -6,36 +6,48 @@ Parser::Node* Parser::PushBackNode(Node n) {
 	return &mNodeTbl.at(mNodeTbl.size() - 1);
 }
 
-Parser::nodeType Parser::GetNodeType(Token& token) {
-	if (token.isOperator('+')) {
+Parser::nodeType Parser::GetNodeType(const Token& token) const {
+	if (token.isReserved('+')) {
 		return nodeType::Add;
 	}
-	else if (token.isOperator('-')) {
+	else if (token.isReserved('-')) {
 		return nodeType::Sub;
 	}
-	else if (token.isOperator('*')) {
+	else if (token.isReserved('*')) {
 		return nodeType::Mul;
 	}
-	else if (token.isOperator('/')) {
+	else if (token.isReserved('/')) {
 		return nodeType::Div;
 	}
-	else if (token.isOperator('>')) {
+	else if (token.isReserved('>')) {
 		return nodeType::Gt;
 	}
-	else if (token.isOperator('<')) {
+	else if (token.isReserved('<')) {
 		return nodeType::Lt;
 	}
-	else if (token.isOperator("<=")) {
+	else if (token.isReserved("<=")) {
 		return nodeType::Le;
 	}
-	else if (token.isOperator(">=")) {
+	else if (token.isReserved(">=")) {
 		return nodeType::Ge;
 	}
-	else if (token.isOperator("==")) {
+	else if (token.isReserved("==")) {
 		return nodeType::Eq;
 	}
-	else if (token.isOperator("!=")) {
+	else if (token.isReserved("!=")) {
 		return nodeType::Ne;
+	}
+	else if (token.isReserved("if")) {
+		return nodeType::If_;
+	}
+	else if (token.isReserved("for")) {
+		return nodeType::For_;
+	}
+	else if (token.isReserved("while")) {
+		return nodeType::While_;
+	}
+	else if (token.isReturn()) {
+		return nodeType::Return;
 	}
 	return nodeType::None;
 }
@@ -49,20 +61,18 @@ void Parser::Program() {
 
 Parser::Node* Parser::Statement() {
 	Node* node;
-	const Token& t = getCurTk();
 	const auto expectAndNext = [&](char c) { getCurTk().expect(c); ++mCurrentPos; };
-	const auto checkAndNext = [&](string_view sv) {
-		return (getCurTk().isReserved(sv)) ? ++mCurrentPos : 0;
-	};
-
-	if (t.isReturn()) {
+	switch ( auto type = GetNodeType(getCurTk()) ) {
+	case nodeType::Return:
 		++mCurrentPos;
-		node = PushBackNode({ .type = nodeType::Return, .lhs = Expr() });
+		node = PushBackNode({ .type = type, .lhs = Expr() });
 		expectAndNext(';');
-	}
+		break;
+
 	// if ( lhs ) middle  else ( rhs )
-	else if (checkAndNext("if")) {
-		Node n{ .type = nodeType::If_ };
+	case nodeType::If_: {
+		++mCurrentPos;
+		Node n{ .type = type };
 		expectAndNext('(');
 		n.lhs = Expr();
 		expectAndNext(')');
@@ -72,32 +82,37 @@ Parser::Node* Parser::Statement() {
 			n.rhs = Statement();
 		}
 		node = PushBackNode(n);
+		break;
 	}
+
 	// for ( lhs ; middle ; rhs ) { statement }
-	else if (checkAndNext("for")) {
-		Node n{ .type = nodeType::For_ };
+	case nodeType::For_: {
+		++mCurrentPos;
+		Node n{ .type = type };
 		const auto readExprIf = [&](Node*& n, char c) {
-			if (!mTokenTbl[mCurrentPos + 1].isOperator(c)) {
+			if (!mTokenTbl[mCurrentPos + 1].isReserved(c)) {
 				n = Expr();
 			}
 			expectAndNext(c);
-		};
-
+			};
 		expectAndNext('(');
 		readExprIf(n.lhs, ';');
 		readExprIf(n.middle, ';');
 		readExprIf(n.rhs, ')');
 		node = PushBackNode(n);
+		break;
 	}
-	else if (checkAndNext("while")) {
+	case nodeType::While_:
+		++mCurrentPos;
 		expectAndNext('(');
-		node = PushBackNode({ .type = nodeType::While_, .lhs = Expr() });
+		node = PushBackNode({ .type = type, .lhs = Expr() });
 		expectAndNext(')');
 		node->rhs = Statement();
-	}
-	else {
+		break;
+	default:
 		node = Expr();
 		expectAndNext(';');
+		break;
 	}
 	return node;
 }
@@ -108,7 +123,7 @@ Parser::Node* Parser::Expr() {
 
 Parser::Node* Parser::Assign() {
 	Node* node = Equality();
-	if (mTokenTbl[mCurrentPos].isOperator('=')) {
+	if (getCurTk().isReserved('=')) {
 		++mCurrentPos;
 		node = PushBackNode(Node{ nodeType::Assign,  node, Assign() });
 	}
@@ -118,7 +133,7 @@ Parser::Node* Parser::Assign() {
 Parser::Node* Parser::Equality() {
 	Node* node = Relational();
 	while (!isEndOfState()) {
-		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
+		switch (auto type = GetNodeType(getCurTk())) {
 		case nodeType::Eq:
 		case nodeType::Ne:
 			++mCurrentPos;
@@ -134,7 +149,7 @@ Parser::Node* Parser::Equality() {
 Parser::Node* Parser::Relational() {
 	Node* node = Add();
 	while (!isEndOfState()) {
-		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
+		switch (auto type = GetNodeType(getCurTk())) {
 		case nodeType::Lt:
 		case nodeType::Le:
 		case nodeType::Gt:
@@ -152,7 +167,7 @@ Parser::Node* Parser::Relational() {
 Parser::Node* Parser::Add() {
 	Node* node = Mul();
 	while (!isEndOfState()) {
-		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
+		switch (auto type = GetNodeType(getCurTk())) {
 		case nodeType::Add:
 		case nodeType::Sub:
 			++mCurrentPos;
@@ -168,7 +183,7 @@ Parser::Node* Parser::Add() {
 Parser::Node* Parser::Mul() {
 	Node* node = Unary();
 	while (!isEndOfState()) {
-		switch (auto type = GetNodeType(mTokenTbl[mCurrentPos])) {
+		switch (auto type = GetNodeType(getCurTk())) {
 		case nodeType::Mul:
 		case nodeType::Div:
 			++mCurrentPos;
@@ -182,7 +197,7 @@ Parser::Node* Parser::Mul() {
 }
 
 Parser::Node* Parser::Unary() {
-	switch (GetNodeType(mTokenTbl[mCurrentPos])) {
+	switch (GetNodeType(getCurTk())) {
 	case nodeType::Add:
 		++mCurrentPos;
 		return Primaly();
@@ -200,7 +215,7 @@ Parser::Node* Parser::Unary() {
 Parser::Node* Parser::Primaly() {
 	//次のトークンが"("なら、"(" expr ")"のはず	
 	Token& t = mTokenTbl[mCurrentPos++];
-	if (t.isOperator('(')) {
+	if (t.isReserved('(')) {
 		Node* node = Expr();
 		mTokenTbl[mCurrentPos++].expect(')');
 		return node;
