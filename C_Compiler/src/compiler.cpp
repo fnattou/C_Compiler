@@ -250,16 +250,11 @@ void Compiler::Tokenize() {
 
 		//—\–ñŒê‚©”»’f‚·‚éŠÖ”
 		const auto checkWord = [&](string_view sv) { 
-			//æ‚É“ªˆê•¶š‚¾‚¯”»’è
-			if (c != sv[0]) {
-				return false;
-			}
 			if (isValidIdx(i + sv.size() - 1) && memcmp(ref, sv.data(), sv.size()) == 0) {
 				//—\–ñŒê‚ÌŸ‚ª•¶š‚Å‚ ‚éê‡‚Í•Ï”éŒ¾‚É‚È‚éB—á@returnHoge, if3, forcast
-				if (isValidIdx(i + sv.size()) && isalnum(mSrcStr[i + sv.size()])) {
-					return false;
+				if (isValidIdx(i + sv.size()) && !isalnum(mSrcStr[i + sv.size()])) {
+					return true;
 				}
-				return true;
 			}
 			return false;
 		};
