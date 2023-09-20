@@ -1,5 +1,6 @@
 #pragma once
 #include "parser.h"
+#include <iostream>
 
 Parser::Node* Parser::PushBackNode(Node n) {
 	mNodeTbl.push_back(n);
@@ -57,9 +58,38 @@ Parser::nodeType Parser::GetNodeType(const Token& token) const {
 
 void Parser::Program() {
 	while (mCurrentPos < mTokenTbl.size()) {
-		Node* node = Statement();
-		mRootNodeTbl.push_back(node);
+			mRootNodeTbl.push_back(Function());
 	}
+}
+
+Parser::Node* Parser::Function() {
+	Node n{ .type = nodeType::DeclareFunc }; 
+	mFuncInfoTbl.push_back(FuncInfo{ .name = getCurTk().mStr });
+	mCurrentFuncInfoPtr = &mFuncInfoTbl[mFuncInfoTbl.size() - 1];
+	//関数名
+	if (!getCurTk().isIdent()) {
+		std::cerr << "関数宣言から始まっていません" << std::endl;
+		assert(0);
+	}
+	++mCurrentPos;
+
+	//引数部分
+	getCurTk().expect('('); ++mCurrentPos;
+	while (!getCurTk().isReserved(')')) {
+		const int ofs = (mCurrentFuncInfoPtr->lValMap.size() + 1) * 8;
+		mCurrentFuncInfoPtr->lValMap.emplace(getCurTk().mStr, ofs);
+		auto p = PushBackNode(Node{ .type = nodeType::LocalVal, .offset = ofs });
+		mCurrentFuncInfoPtr->argumentNodeTbl.push_back(p);
+		++mCurrentPos;
+	}
+
+	//関数の本体
+	getCurTk().expect('{'); ++mCurrentPos;
+	while (!getCurTk().isReserved('}')) {
+		Node* node = Statement();
+		n.innerBlockNodeTbl.push_back(node);
+	}
+	return PushBackNode(n);
 }
 
 Parser::Node* Parser::Statement() {
@@ -226,22 +256,38 @@ Parser::Node* Parser::Unary() {
 }
 
 Parser::Node* Parser::Primaly() {
-	//次のトークンが"("なら、"(" expr ")"のはず	
 	Token& t = mTokenTbl[mCurrentPos++];
+	//次のトークンが"("なら、"(" expr ")"のはず	
 	if (t.isReserved('(')) {
 		Node* node = Expr();
 		mTokenTbl[mCurrentPos++].expect(')');
 		return node;
 	}
-	else if (t.isIdent()) {
-		if (mLValMap.contains(t.mStr)) {
-			return PushBackNode(Node{ .type = nodeType::LocalVal, .offset =  mLValMap.at(t.mStr)});
+	//変数名もしくは関数名
+	if (t.isIdent()) {
+
+		//"(" が続くなら関数呼び出し
+		if (mCurrentPos + 1 < mTokenTbl.size() && mTokenTbl[mCurrentPos + 1].isReserved("(")) {
+			Node n{ .type = nodeType::CallFunc , .funcInfoPtr = mCurrentFuncInfoPtr };
+			++mCurrentPos;
+			while (!getCurTk().isReserved(")")) {
+				n.argumentNodeTbl.push_back(Expr());
+				if (getCurTk().isReserved(",")) ++mCurrentPos;
+			}
+			++mCurrentPos;
+			return PushBackNode(n);
 		}
-		else {
-			const int ofs = (mLValMap.size() + 1) * 8;
-			mLValMap.emplace(t.mStr, ofs);
-			return PushBackNode(Node{ .type = nodeType::LocalVal, .offset = ofs });
+
+		//変数
+		if (mCurrentFuncInfoPtr->lValMap.contains(t.mStr)) {
+			return PushBackNode(Node{
+				.type = nodeType::LocalVal,
+				.offset = mCurrentFuncInfoPtr->lValMap.at(t.mStr)
+				});
 		}
+		const int ofs = (mCurrentFuncInfoPtr->lValMap.size() + 1) * 8;
+		mCurrentFuncInfoPtr->lValMap.emplace(t.mStr, ofs);
+		return PushBackNode(Node{ .type = nodeType::LocalVal, .offset = ofs });
 	}
 
 	// そうでなければ数値のはず

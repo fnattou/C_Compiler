@@ -2,6 +2,7 @@
 #include <vector>
 #include <cassert>
 #include <unordered_map>
+#include <set>
 #include "token.h"
 using std::vector;
 using std::string_view;
@@ -19,6 +20,8 @@ public:
 		For_,
 		While_,
 		Block,
+		CallFunc,
+		DeclareFunc,
 		Add,
 		Sub,
 		Mul,
@@ -33,7 +36,7 @@ public:
 		Return,
 		None,
 	};
-
+	struct FuncInfo;
 	struct Node {
 		nodeType type;
 		Node* lhs;
@@ -42,11 +45,21 @@ public:
 		int val; //typeがNumのときだけ使う
 		int offset; //typeがLocalValの時だけ使う
 		vector<Node*> innerBlockNodeTbl; // typeがBlockの時だけ使う
+		vector<Node*> argumentNodeTbl; // typeがCallFuncの時だけ使う
+		FuncInfo* funcInfoPtr; //typeがFuncのときだけ使う
+	};
+
+	struct FuncInfo {
+		string_view name;
+		unordered_map<string_view, int> lValMap;
+		vector<Node*> argumentNodeTbl; 
 	};
 
 
-	// ローカル変数の情報を保存するための型
+	// ローカル変数のスタックからのオフセットを保存するための型
 	unordered_map<string_view, int> mLValMap;
+	vector<FuncInfo> mFuncInfoTbl;
+	FuncInfo* mCurrentFuncInfoPtr;
 	
 	vector<Node> mNodeTbl;
 	vector<Node*> mRootNodeTbl;
@@ -73,6 +86,8 @@ private:
 	//抽象構文木の生成文法
 	//------------------------------------------
 	//program	 = statement*
+	//			| func statement* 
+	//function   = ident "(" (ident ",")* ident? ")" "{" statement* "}"
 	//statement	 = expr ";"
 	//			| "if" "(" expr ")" statement ( "else" stmt )?
 	//			| "while" "(" expr ")" statement
@@ -88,9 +103,12 @@ private:
 	//add        = mul ("+" mul | "-" mul)*
 	//mul        = unary ("*" unary | "/" unary)*
 	//unary      = ("+" | "-")? primary
-	//primary    = num | ident | "(" expr ")"
+	//primary    = num 
+	//			| ident ( "(" (ident "," )* ident? ")"　)?
+	//			| "(" expr ")"
 
 	void Program();
+	Node* Function();
 	Node* Statement();
 	Node* Expr();
 	Node* Assign();
@@ -117,4 +135,5 @@ private:
 	const Token& getCurTk() {
 		return mTokenTbl[mCurrentPos];
 	}
+
 };

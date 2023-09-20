@@ -27,14 +27,19 @@ private:
 	//パース後の抽象構文木を読み込んで、コードを作成する
 	void ReadNodeTree(Parser::Node& node);
 
-	//左辺値としてノードを読みこむ
+	//左辺値としてノードを読みこんで、コードを生成する
 	void ReadLValueNode(Parser::Node& node);
+
+	//関数としてノードを読んでコードを生成する
+	void ReadFuncNode(Parser::Node& node);
 
 	//i < mSrcStr.size()
 	bool isValidIdx(size_t i) {
 		return i < mSrcStr.size();
 	}
 
+	//関数に引数を渡すときに使用するレジスタ配列
+	static constexpr const char* argRegisterTbl[] = {"rdi", "rsi" ,"rdx", "rcx", "r8", "r9"};
 	string mSrcStr;
 	std::ostringstream oss;
 	std::vector<Token> mTokenTbl;

@@ -17,27 +17,12 @@ void Compiler::Compile(string_view src, string filename) {
 	//アセンブリの前半部分を出力
 	oss << ".intel_syntax noprefix\n";
 	oss << ".globl main\n";
-	oss << "main:" << std::endl;
-
-	//プロローグ : 宣言された変数分の領域を確保する
-	oss << "  push rbp\n";
-	oss << "  mov rbp, rsp\n";
-	oss << "  sub rsp, " << mParser.getTotalBytesOfLVal() << "\n";
 
 	//先頭の式から順にコードを生成
 	while (mCurrentRootNodeIdx <  mParser.mRootNodeTbl.size()) {
 		ReadNodeTree(*mParser.mRootNodeTbl.at(mCurrentRootNodeIdx));
-
-		//式の評価結果としてスタックに一つの値が残っているはずなので
-		//スタックが溢れないようにポップしておく
-		oss << "  pop rax\n";
 		++mCurrentRootNodeIdx;
 	}
-
-	//エピローグ : 最後の式の結果がRAXに残っているのでそれを返り値とする
-	oss << "  mov rsp, rbp\n";
-	oss << "  pop rbp\n";
-	oss << "  ret\n";
 
 	//結果をファイルに保存
 	OutputFile(filename);
@@ -60,6 +45,42 @@ void Compiler::ReadLValueNode(Parser::Node& node) {
 	oss << "  mov rax, rbp\n";
 	oss << "  sub rax, " << node.offset <<"\n";	
 	oss << "  push  rax\n";
+}
+
+void Compiler::ReadFuncNode(Parser::Node& node) {
+	assert(node.type == Parser::nodeType::DeclareFunc);
+	auto* infoPtr = node.funcInfoPtr;
+
+	//関数名をラベルとして記述
+	oss << "." << infoPtr->name << "\n";
+
+	//プロローグ : 宣言された変数分の領域を確保する（実引数もここに入っているはず)
+	oss << "  push rbp\n";
+	oss << "  mov rbp, rsp\n";
+	oss << "  sub rsp, " << infoPtr->lValMap.size() * 8 << "\n";
+
+	//プロローグ２ : 引数が格納されているレジスタから実引数用の変数に移す
+	for (size_t i = 0; i < infoPtr->argumentNodeTbl.size(); ++i) {
+		auto reg = argRegisterTbl[i];
+		auto ofs = infoPtr->argumentNodeTbl[i]->offset;
+		oss << "  mov [rbp -  " << ofs << "] " << reg << "\n";	
+	}
+
+	//先頭の式から順にコードを生成
+	for (auto* n : node.innerBlockNodeTbl) {
+		ReadNodeTree(*n);
+
+		//式の評価結果としてスタックに一つの値が残っているはずなので
+		//スタックが溢れないようにポップしておく
+		oss << "  pop rax\n";
+	}
+
+	//エピローグ : 最後の式の結果がRAXに残っているのでそれを返り値とする
+	oss << "  mov rsp, rbp\n";
+	oss << "  pop rbp\n";
+	oss << "  ret\n";
+
+
 }
 
 void Compiler::ReadNodeTree(Parser::Node& node) {
@@ -155,6 +176,20 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 			oss << "  pop rax\n";
 		}
 		return;
+	}
+	case Type::CallFunc: {
+		assert( node.argumentNodeTbl.size() <= 6);
+		for (const auto n : node.argumentNodeTbl) {
+			ReadNodeTree(*n);
+		}
+		for (size_t i = node.argumentNodeTbl.size() - 1; i >= 0 ; --i) {
+			oss << "  pop " << argRegisterTbl[i] << "\n";
+		}
+		oss << "  call " << node.funcInfoPtr->name << "\n";
+
+	}
+	case Type::DeclareFunc: {
+
 	}
 	default:
 		break;
