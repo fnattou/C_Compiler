@@ -81,20 +81,36 @@ namespace makingAsmFile {
 
 namespace addAndSub {
 	TEST(CompilerTest, JustZero) {
-		COMPILE_AND_TEST("0;", "JustZero", 0);
+		const auto src = 
+			"main() {"
+			"return 0;"
+			"}";
+		COMPILE_AND_TEST(src,  "JustZero", 0);
 	}
 
 
 	TEST(CompilerTest, SomeCalc) {
-		COMPILE_AND_TEST("1+1;", "SomeCalc", 2);
+		const auto src = 
+			"main() {"
+			"return 1+1;"
+			"}";
+		COMPILE_AND_TEST(src,  "SomeCalc", 2);
 	}
 
 	TEST(CompilerTest, SomeSpace) {
-		COMPILE_AND_TEST("1 + 2;", "SomeSpace", 3);
+		const auto src = 
+			"main() {"
+			"return 1 + 2;"
+			"}";
+		COMPILE_AND_TEST(src,  "SomeSpace", 3);
 	}
 
 	TEST(CompilerTest, MultipleSpace) {
-		COMPILE_AND_TEST("1 + 2 - 1 + 4;", "MultipleSpace", 6);
+		const auto src = 
+			"main() {"
+			"return 1 + 2 - 1 + 4;"
+			"}";
+		COMPILE_AND_TEST(src,  "MultipleSpace", 6);
 	}
 }
 
@@ -102,104 +118,186 @@ namespace mulAndDiv {
 
 
 	TEST(CompilerTest, Mul) {
-		COMPILE_AND_TEST("2 * 2;", "Mul", 4);
+		const auto src = 
+			"main() {"
+			"return 2 * 2;"
+			"}";
+		COMPILE_AND_TEST(src,  "Mul", 4);
 	}
 
 	TEST(CompilerTest, MulAndPlus) {
-		COMPILE_AND_TEST("2 * 2 + 1;", "MulAndPlus", 5);
+		const auto src = 
+			"main() {"
+			"return 2 * 2 + 1;"
+			"}";
+		COMPILE_AND_TEST(src,  "MulAndPlus", 5);
 	}
 
 	TEST(CompilerTest, SimpleDiv) {
-		COMPILE_AND_TEST("2 / 2;", "SimpleDiv", 1);
+		const auto src = 
+			"main() {"
+			"return 2 / 2;"
+			"}";
+		COMPILE_AND_TEST(src,  "SimpleDiv", 1);
 	}
 
 	TEST(CompilerTest, DivAndMinus) {
-		COMPILE_AND_TEST("2 / 2 - 1;", "DivAndMinus", 0);
+		const auto src = 
+			"main() {"
+			"return 2 / 2 - 1;"
+			"}";
+		COMPILE_AND_TEST(src,  "DivAndMinus", 0);
 	}
 
 	TEST(CompilerTest, Priority) {
-		COMPILE_AND_TEST("2 / 2 - (1 + 1);", "Priority", -1);
+		const auto src = 
+			"main() {"
+			"return 2 / 2 - (1 + 1);"
+			"}";
+		COMPILE_AND_TEST(src,  "Priority", -1);
 	}
 
 	TEST(CompilerTest, SinglePlus) {
-		COMPILE_AND_TEST("2 * + 2;", "SinglePlus", 4);
+		const auto src = 
+			"main() {"
+			"return 2 * + 2;"
+			"}";
+		COMPILE_AND_TEST(src,  "SinglePlus", 4);
 	}
 
 	TEST(CompilerTest, SingleMinus) {
-		COMPILE_AND_TEST("2 * - 2;", "SingleMinus", -4);
+		const auto src = 
+			"main() {"
+			"return 2 * - 2;"
+			"}";
+		COMPILE_AND_TEST(src,  "SingleMinus", -4);
 	}
 }
 
 namespace comparison {
 	TEST(CompilerTest, Eq) {
-		COMPILE_AND_TEST("1 == 1;", "Eq", 1);
+		const auto src = 
+			"main() {"
+			"return 1 == 1;"
+			"}";
+		COMPILE_AND_TEST(src,  "Eq", 1);
 	}
 
 	TEST(CompilerTest, Ne) {
-		COMPILE_AND_TEST("1 != 1;", "Ne", 0);
+		const auto src = 
+			"main() {"
+			"return 1 != 1;"
+			"}";
+		COMPILE_AND_TEST(src,  "Ne", 0);
 	}
 	
 	TEST(CompilerTest, Le) {
-		COMPILE_AND_TEST("0 <= 1;", "Le", 1);
+		const auto src = 
+			"main() {"
+			"return 0 <= 1;"
+			"}";
+		COMPILE_AND_TEST(src,  "Le", 1);
 	}
 	
 	TEST(CompilerTest, Lt) {
-		COMPILE_AND_TEST("1 <= 1;", "Lt", 1);
+		const auto src = 
+			"main() {"
+			"return 1 <= 1;"
+			"}";
+		COMPILE_AND_TEST(src,  "Lt", 1);
 	}
 	
 	TEST(CompilerTest, Ge) {
-		COMPILE_AND_TEST("1 >= 1;", "Ge", 1);
+		const auto src = 
+			"main() {"
+			"return 1 >= 1;"
+			"}";
+		COMPILE_AND_TEST(src,  "Ge", 1);
 	}
 	
 	TEST(CompilerTest, Gt) {
-		COMPILE_AND_TEST("1 > 1;", "Gt", 0);
+		const auto src = 
+			"main() {"
+			"return 1 > 1;"
+			"}";
+		COMPILE_AND_TEST(src,  "Gt", 0);
 	}
 }
 
 
 namespace localVal {
 	TEST(CompilerTest, DeclareValue) {
-		COMPILE_AND_TEST("a = 1;", "DeclareValue", 1);
+		const auto src = 
+			"main() {"
+			"return a = 1;"
+			"}";
+		COMPILE_AND_TEST(src,  "DeclareValue", 1);
 	}
 
 	TEST(CompilerTest, DeclareValueAndAdd) {
-		COMPILE_AND_TEST("a = 1; a = a + 1;", "DeclareValueAndAdd",2);
+		const auto src = 
+			"main() {"
+			"a = 1; a = a + 1;"
+			"return a;"
+			"}";
+		COMPILE_AND_TEST(src,  "DeclareValueAndAdd",2);
 	}
 }
 
 namespace MultiSentence {
 	TEST(CompilerTest, AddToVal) {
-		COMPILE_AND_TEST("a = 1; a + 1;", "AddToVal", 2);
+		const auto src = 
+			"main() {"
+			"a = 1; a = a + 1;"
+			"return a;"
+			"}";
+		COMPILE_AND_TEST(src,  "AddToVal", 2);
 	}
 
 	TEST(CompilerTest, MulTwoVal) {
-		COMPILE_AND_TEST("a = 5; b = 2;a * b;", "MulTwoVal", 10);
+		const auto src = 
+			"main() {"
+			"a = 5; b = 2;"
+			"return a * b;"
+			"}";
+		COMPILE_AND_TEST(src,  "MulTwoVal", 10);
 	}
 
 
 	TEST(CompilerTest, CalcWithSomeVal) {
-		COMPILE_AND_TEST("a = 3; b = 5 * 6 - 4; a + b / 2;", "AddToVal" ,16);
+		const auto src = 
+			"main() {"
+			"a = 3; b = 5 * 6 - 4;"
+			"return a + b / 2;"
+			"}";
+		COMPILE_AND_TEST(src,  "AddToVal" ,16);
 	}
 
 	TEST(CompilerTest, LongNameLval) {
 		COMPILE_AND_TEST(
-			"foo = 1;"
+			"main() {foo = 1;"
 			"bar = 2 + 3;"
-			"foo + bar;", 
+			"return foo + bar; }", 
 			"LongNameLval" ,6);
 	}
 }
 
 namespace returnTest {
 	TEST(CompilerTest, ReturnAValue) {
-		COMPILE_AND_TEST("return 10;", "ReturnAValue" ,10);
+		const auto src =
+			"main() {"
+			"return 10;"
+			"}";
+		COMPILE_AND_TEST(src, "ReturnAValue" ,10);
 	}
 
 	TEST(CompilerTest, ReturnSomeCalc) {
 		const auto src =
+			"main() {"
 			"a = 1;"
 			"b = 2 * 3;"
-			"return a + b;";
+			"return a + b;"
+			"}";
 		COMPILE_AND_TEST(src, "ReturnSomeCalc", 7);
 	}
 }
@@ -208,32 +306,40 @@ namespace returnTest {
 namespace branchTest {
 	TEST(CompilerTest, IfTest) {
 		const auto src =
+			"main() {"
 			"if ( 0 < 1 )"
-			"10;";
+			"10;"
+			"}";
 		COMPILE_AND_TEST(src, "IfTest", 10);
 	}
 
 	TEST(CompilerTest, IfAndElse) {
 		const auto src =
+			"main() {"
 			"if ( 0 > 1 ) 2; "
-			"else 10;";
+			"else 10;"
+			"}";
 		COMPILE_AND_TEST(src, "IfAndElse", 10);
 	}
 
 	TEST(CompilerTest, whileTest) {
 		const auto src =
+			"main() {"
 			"a = 1;"
 			"while ( a < 10 ) a = a + 1; "
-			"return a;";
+			"return a;"
+			"}";
 		COMPILE_AND_TEST(src, "WhileTest", 10);
 	}
 
 
 	TEST(CompilerTest, ForTest) {
 		const auto src =
+			"main() {"
 			"a = 0;"
 			"for (i = 1; i <= 10; i = i + 1 )"
-			"a = a + i;";
+			"a = a + i;"
+			"}";
 		COMPILE_AND_TEST(src, "ForTest", 55);
 	}
 
@@ -243,13 +349,15 @@ namespace branchTest {
 namespace blockstate {
 	TEST(CompilerTest,  BlockWithFor) {
 		const auto src =
+			"main() {"
 			"a = 2;"
 			"for (i = 1; i <= 10; i = i + 1 )"
 			"{"
 			"	a = a + i;"
 			"	a = a - i;"
 			"}"
-			"return a;";
+			"return a;"
+			"}";
 		COMPILE_AND_TEST(src, "BlockWithFor", 2);
 	}
 }
