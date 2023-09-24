@@ -25,7 +25,8 @@ private:
 	void error_at(size_t pos, const char* fmt...) const;
 
 	//パース後の抽象構文木を読み込んで、コードを作成する
-	void ReadNodeTree(Parser::Node& node);
+	struct NodeTblInfo;
+	void ReadNodeTree(Parser::Node& node, NodeTblInfo& info);
 
 	//左辺値としてノードを読みこんで、コードを生成する
 	void ReadLValueNode(Parser::Node& node);
@@ -43,6 +44,15 @@ private:
 	string mSrcStr;
 	std::ostringstream oss;
 	std::vector<Token> mTokenTbl;
-	size_t mCurrentRootNodeIdx;
 	Parser mParser;
+	struct NodeTblInfo {
+		std::vector<Parser::Node*>& nodeTbl;
+		size_t currentNodeTblIdx;
+		bool isEndOfTbl() {
+			return currentNodeTblIdx == nodeTbl.size();
+		}
+		Parser::Node& getCurNode() {
+			return *nodeTbl[currentNodeTblIdx];
+		}
+	};
 };

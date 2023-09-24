@@ -3,7 +3,6 @@
 #include <stdarg.h>
 Compiler::Compiler()
 	:mTokenTbl()
-	,mCurrentRootNodeIdx(0)
 {
  
 }
@@ -19,9 +18,10 @@ void Compiler::Compile(string_view src, string filename) {
 	oss << ".globl main\n";
 
 	//先頭の式から順にコードを生成
-	while (mCurrentRootNodeIdx <  mParser.mRootNodeTbl.size()) {
-		ReadNodeTree(*mParser.mRootNodeTbl.at(mCurrentRootNodeIdx));
-		++mCurrentRootNodeIdx;
+	NodeTblInfo info{ mParser.mRootNodeTbl, 0 };
+	while (!info.isEndOfTbl()) {
+		ReadNodeTree(info.getCurNode(), info);
+		++info.currentNodeTblIdx;
 	}
 
 	//結果をファイルに保存
@@ -52,9 +52,10 @@ void Compiler::ReadFuncNode(Parser::Node& node) {
 	auto* infoPtr = node.funcInfoPtr;
 
 	//関数名をラベルとして記述
-	oss << "." << infoPtr->name << "\n";
+	oss <<  infoPtr->name << ":\n";
 
-	//プロローグ : 宣言された変数分の領域を確保する（実引数もここに入っているはず)
+	//プロローグ : 宣言された変数分の
+	// 領域を確保する（実引数もここに入っているはず)
 	oss << "  push rbp\n";
 	oss << "  mov rbp, rsp\n";
 	oss << "  sub rsp, " << infoPtr->lValMap.size() * 8 << "\n";
@@ -67,9 +68,10 @@ void Compiler::ReadFuncNode(Parser::Node& node) {
 	}
 
 	//先頭の式から順にコードを生成
-	for (auto* n : node.innerBlockNodeTbl) {
-		ReadNodeTree(*n);
-
+	NodeTblInfo info{ node.innerBlockNodeTbl, 0 };
+	while (!info.isEndOfTbl()) {
+		ReadNodeTree(info.getCurNode(), info);
+		info.currentNodeTblIdx++;
 		//式の評価結果としてスタックに一つの値が残っているはずなので
 		//スタックが溢れないようにポップしておく
 		oss << "  pop rax\n";
@@ -83,7 +85,7 @@ void Compiler::ReadFuncNode(Parser::Node& node) {
 
 }
 
-void Compiler::ReadNodeTree(Parser::Node& node) {
+void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 	using Node = Parser::Node; using Type = Parser::nodeType;
 
 	//代入、制御文、return文など
@@ -95,7 +97,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		return;
 	case Type::Assign:
 		ReadLValueNode(*node.lhs);
-		ReadNodeTree(*node.rhs);
+		ReadNodeTree(*node.rhs, info);
 		oss << "  pop rdi\n";
 		oss << "  pop rax\n";
 		oss << "  mov [rax], rdi\n";
@@ -109,7 +111,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		oss << "  push rax\n";
 		return;
 	case Type::Return:
-		ReadNodeTree(*node.lhs);
+		ReadNodeTree(*node.lhs, info);
 		oss << "  pop rax\n";
 		oss << "  mov rsp, rbp\n";
 		oss << "  pop rbp\n";
@@ -117,15 +119,15 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		return;
 	case Type::If_: {
 		int ifLabelNum = labelNum;
-		ReadNodeTree(*node.lhs);
+		ReadNodeTree(*node.lhs, info);
 		oss << "  pop rax\n";
 		oss << "  cmp rax, 0\n";
 		oss << "  je .LElse" << ifLabelNum << "\n";
-		ReadNodeTree(*node.middle);
+		ReadNodeTree(*node.middle, info);
 		oss << "  jmp .LEnd" << ifLabelNum << "\n";
 		oss << ".LElse" << ifLabelNum << ":\n";
 		if (node.rhs) {
-			ReadNodeTree(*node.rhs);
+			ReadNodeTree(*node.rhs, info);
 		}
 		oss << ".LEnd" << ifLabelNum << ":\n";
 		++labelNum;
@@ -134,11 +136,11 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 	case Type::For_: {
 		int forLabelNum = labelNum;
 		if (node.lhs) {
-			ReadNodeTree(*node.lhs);
+			ReadNodeTree(*node.lhs, info);
 		}
 		oss << ".LBegin" << forLabelNum << ":\n";
 		if (node.middle) {
-			ReadNodeTree(*node.middle);
+			ReadNodeTree(*node.middle, info);
 		}
 		else {
 			oss << "  push 1\n";
@@ -146,9 +148,9 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		oss << "  pop rax\n";
 		oss << "  cmp rax, 0\n";
 		oss << "  je .LEnd" << forLabelNum << "\n";
-		ReadNodeTree(*mParser.mRootNodeTbl.at(++mCurrentRootNodeIdx));
+		ReadNodeTree(*info.nodeTbl[++info.currentNodeTblIdx], info);
 		if (node.rhs) {
-			ReadNodeTree(*node.rhs);
+			ReadNodeTree(*node.rhs, info);
 			//余計に一回pushしているのでここでpopしておく
 			oss << "  pop rax\n";
 		}
@@ -160,11 +162,11 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 	case Type::While_: {
 		int whileLabelNum = labelNum;
 		oss << ".LBegin" << whileLabelNum << ":\n";
-		ReadNodeTree(*node.lhs);
+		ReadNodeTree(*node.lhs, info);
 		oss << "  pop rax\n";
 		oss << "  cmp rax, 0\n";
 		oss << "  je .LEnd" << whileLabelNum << "\n";
-		ReadNodeTree(*node.rhs);
+		ReadNodeTree(*node.rhs, info);
 		oss << "  jmp .LBegin" << whileLabelNum << "\n";
 		oss << ".LEnd" << whileLabelNum << ":\n";
 		++labelNum;
@@ -172,7 +174,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 	}
 	case Type::Block: {
 		for (auto* innerNode : node.innerBlockNodeTbl) {
-			ReadNodeTree(*innerNode);
+			ReadNodeTree(*innerNode, info);
 			oss << "  pop rax\n";
 		}
 		return;
@@ -180,7 +182,7 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 	case Type::CallFunc: {
 		assert( node.argumentNodeTbl.size() <= 6);
 		for (const auto n : node.argumentNodeTbl) {
-			ReadNodeTree(*n);
+			ReadNodeTree(*n, info);
 		}
 		for (size_t i = node.argumentNodeTbl.size() - 1; i >= 0 ; --i) {
 			oss << "  pop " << argRegisterTbl[i] << "\n";
@@ -188,9 +190,9 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		oss << "  call " << node.funcInfoPtr->name << "\n";
 
 	}
-	case Type::DeclareFunc: {
 
-	}
+	case Type::DeclareFunc: 
+		ReadFuncNode(node);
 	default:
 		break;
 	}
@@ -201,8 +203,8 @@ void Compiler::ReadNodeTree(Parser::Node& node) {
 		return;
 	}
 
-	ReadNodeTree(*node.lhs);
-	ReadNodeTree(*node.rhs);
+	ReadNodeTree(*node.lhs, info);
+	ReadNodeTree(*node.rhs, info);
 
 	oss << "  pop rdi\n";
 	oss << "  pop rax\n";

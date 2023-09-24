@@ -66,6 +66,7 @@ Parser::Node* Parser::Function() {
 	Node n{ .type = nodeType::DeclareFunc }; 
 	mFuncInfoTbl.push_back(FuncInfo{ .name = getCurTk().mStr });
 	mCurrentFuncInfoPtr = &mFuncInfoTbl[mFuncInfoTbl.size() - 1];
+	n.funcInfoPtr = mCurrentFuncInfoPtr;
 	//ä÷êîñº
 	if (!getCurTk().isIdent()) {
 		std::cerr << "ä÷êîêÈåæÇ©ÇÁénÇ‹Ç¡ÇƒÇ¢Ç‹ÇπÇÒ" << std::endl;
@@ -82,6 +83,7 @@ Parser::Node* Parser::Function() {
 		mCurrentFuncInfoPtr->argumentNodeTbl.push_back(p);
 		++mCurrentPos;
 	}
+	++mCurrentPos;
 
 	//ä÷êîÇÃñ{ëÃ
 	getCurTk().expect('{'); ++mCurrentPos;
@@ -89,6 +91,7 @@ Parser::Node* Parser::Function() {
 		Node* node = Statement();
 		n.innerBlockNodeTbl.push_back(node);
 	}
+	++mCurrentPos;
 	return PushBackNode(n);
 }
 
