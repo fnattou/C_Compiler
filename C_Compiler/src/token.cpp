@@ -20,7 +20,7 @@ int Token::expectNumber() const {
 
 bool Token::expect(char op) const{
 	if (mType != Token::TokenType::Reserved || mStr[0] != op) {
-		error("'%c'‚Å‚Í‚ ‚è‚Ü‚¹‚ñ");
+		error("'%c'‚Å‚Í‚ ‚è‚Ü‚¹‚ñ", op);
 	}
 	return true;
 }
