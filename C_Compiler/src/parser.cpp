@@ -64,8 +64,8 @@ void Parser::Program() {
 
 Parser::Node* Parser::Function() {
 	Node n{ .type = nodeType::DeclareFunc }; 
-	mFuncInfoTbl.push_back(FuncInfo{ .name = getCurTk().mStr });
-	mCurrentFuncInfoPtr = &mFuncInfoTbl[mFuncInfoTbl.size() - 1];
+	mFuncInfoTbl.emplace(getCurTk().mStr,  FuncInfo{ .name = getCurTk().mStr });
+	mCurrentFuncInfoPtr = &mFuncInfoTbl[getCurTk().mStr];
 	n.funcInfoPtr = mCurrentFuncInfoPtr;
 	//関数名
 	if (!getCurTk().isIdent()) {
@@ -270,8 +270,8 @@ Parser::Node* Parser::Primaly() {
 	if (t.isIdent()) {
 
 		//"(" が続くなら関数呼び出し
-		if (mCurrentPos + 1 < mTokenTbl.size() && mTokenTbl[mCurrentPos + 1].isReserved("(")) {
-			Node n{ .type = nodeType::CallFunc , .funcInfoPtr = mCurrentFuncInfoPtr };
+		if (mTokenTbl[mCurrentPos].isReserved("(")) {
+			Node n{ .type = nodeType::CallFunc , .funcInfoPtr = &mFuncInfoTbl[t.mStr]};
 			++mCurrentPos;
 			while (!getCurTk().isReserved(")")) {
 				n.argumentNodeTbl.push_back(Expr());
@@ -303,7 +303,8 @@ void Parser::Parse(vector<Token>& tokenTbl) {
 	//Fix me : ポインタでlhs, rhsを保存しているため、サイズ拡張時にmoveが発生して壊れる。
 	//回避策として多めにとっておく
 	mNodeTbl.reserve(tokenTbl.size() * 10);
-	if (mTokenTbl.size() > 0) {
+	mRootNodeTbl.reserve(tokenTbl.size());
+		if (mTokenTbl.size() > 0) {
 		Program();
 	}
 }

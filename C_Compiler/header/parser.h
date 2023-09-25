@@ -58,7 +58,7 @@ public:
 
 	// ローカル変数のスタックからのオフセットを保存するための型
 	unordered_map<string_view, int> mLValMap;
-	vector<FuncInfo> mFuncInfoTbl;
+	unordered_map<string_view, FuncInfo> mFuncInfoTbl;
 	FuncInfo* mCurrentFuncInfoPtr;
 	
 	vector<Node> mNodeTbl;
