@@ -361,3 +361,27 @@ namespace blockstate {
 		COMPILE_AND_TEST(src, "BlockWithFor", 2);
 	}
 }
+
+namespace funcTest {
+	TEST(CompilerTest, FuncWithoutArgs) {
+		const auto src =
+			"func() {"
+			"return 1;}"
+			"main() {"
+			"a = func();"
+			"return a;"
+			"}";
+		COMPILE_AND_TEST(src, "FuncWithoutArgs", 1);
+	}
+
+	TEST(CompilerTest, FuncWithArgs) {
+		const auto src =
+			"func(b) {"
+			"return b + 1;}"
+			"main() {"
+			"a = func(2 + 2);"
+			"return a;"
+			"}";
+		COMPILE_AND_TEST(src, "FuncWithArgs", 5);
+	}
+}
