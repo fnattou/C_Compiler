@@ -64,7 +64,7 @@ void Compiler::ReadFuncNode(Parser::Node& node) {
 	for (size_t i = 0; i < infoPtr->argumentNodeTbl.size(); ++i) {
 		auto reg = argRegisterTbl[i];
 		auto ofs = infoPtr->argumentNodeTbl[i]->offset;
-		oss << "  mov [rbp -  " << ofs << "] " << reg << "\n";	
+		oss << "  mov [rbp -  " << ofs << "], " << reg << "\n";	
 	}
 
 	//æ“ª‚ÌŽ®‚©‚ç‡‚ÉƒR[ƒh‚ð¶¬
@@ -184,15 +184,17 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		for (const auto n : node.argumentNodeTbl) {
 			ReadNodeTree(*n, info);
 		}
-		for (size_t i = node.argumentNodeTbl.size() - 1; i >= 0 ; --i) {
-			oss << "  pop " << argRegisterTbl[i] << "\n";
+		for (size_t i = node.argumentNodeTbl.size(); i >= 1 ; --i) {
+			oss << "  pop " << argRegisterTbl[i - 1] << "\n";
 		}
 		oss << "  call " << node.funcInfoPtr->name << "\n";
-
+		oss << "  push rax\n";
+		return;
 	}
 
 	case Type::DeclareFunc: 
 		ReadFuncNode(node);
+		return;
 	default:
 		break;
 	}
