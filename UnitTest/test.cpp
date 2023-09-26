@@ -385,3 +385,16 @@ namespace funcTest {
 		COMPILE_AND_TEST(src, "FuncWithArgs", 5);
 	}
 }
+
+
+namespace addresTest {
+	TEST(CompilerTest, AddressAndDeref) {
+		const auto src =
+			"main() {"
+			"a = 3;"
+			"b = &a;"
+			"return *b;"
+			"}";
+		COMPILE_AND_TEST(src, "AddressAndDeref", 3);
+	}
+}
