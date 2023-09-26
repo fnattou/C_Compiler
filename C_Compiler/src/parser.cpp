@@ -8,50 +8,21 @@ Parser::Node* Parser::PushBackNode(Node n) {
 }
 
 Parser::nodeType Parser::GetNodeType(const Token& token) const {
-	if (token.isReserved('+')) {
-		return nodeType::Add;
-	}
-	else if (token.isReserved('-')) {
-		return nodeType::Sub;
-	}
-	else if (token.isReserved('*')) {
-		return nodeType::Mul;
-	}
-	else if (token.isReserved('/')) {
-		return nodeType::Div;
-	}
-	else if (token.isReserved('>')) {
-		return nodeType::Gt;
-	}
-	else if (token.isReserved('<')) {
-		return nodeType::Lt;
-	}
-	else if (token.isReserved("<=")) {
-		return nodeType::Le;
-	}
-	else if (token.isReserved(">=")) {
-		return nodeType::Ge;
-	}
-	else if (token.isReserved("==")) {
-		return nodeType::Eq;
-	}
-	else if (token.isReserved("!=")) {
-		return nodeType::Ne;
-	}
-	else if (token.isReserved("if")) {
-		return nodeType::If_;
-	}
-	else if (token.isReserved("for")) {
-		return nodeType::For_;
-	}
-	else if (token.isReserved("while")) {
-		return nodeType::While_;
-	}
-	else if (token.isReturn()) {
+	if (token.isReturn()) {
 		return nodeType::Return;
 	}
-	else if (token.isReserved('{')) {
-		return nodeType::Block;
+
+	static const std::unordered_map<string_view, nodeType>  map = {
+		{"+", nodeType::Add}, {"-", nodeType::Sub}, {"*", nodeType::Mul},
+		{"/", nodeType::Div}, {">", nodeType::Gt}, {"<", nodeType::Lt},
+		{"<=", nodeType::Le}, {">=", nodeType::Ge}, {"==", nodeType::Eq},
+		{"!=", nodeType::Ne}, {"if", nodeType::If_}, {"for", nodeType::For_},
+		{"while", nodeType::While_}, {"{", nodeType::Block}, {"&", nodeType::Addr}
+	};
+	for (const auto& pair : map) {
+		if (token.isReserved(pair.first)) {
+			return pair.second;
+	}
 	}
 	return nodeType::None;
 }
