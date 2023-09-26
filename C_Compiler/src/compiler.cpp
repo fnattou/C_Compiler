@@ -194,6 +194,15 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 
 	case Type::DeclareFunc: 
 		ReadFuncNode(node);
+		return;	
+	case Type::Addr:
+		ReadLValueNode(*node.rhs);
+		return;
+	case Type::Deref:
+		ReadNodeTree(*node.rhs, info);
+		oss << "  pop rax\n";
+		oss << "  mov rax, [rax]\n";
+		oss << "  push rax\n";
 		return;
 	default:
 		break;
@@ -211,7 +220,7 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 	oss << "  pop rdi\n";
 	oss << "  pop rax\n";
 
-	//“ñ€‰‰ŽZŽq‚Ìê‡
+	//‰‰ŽZŽq‚Ìê‡
 	switch (node.type) {
 	case Type::Add:
 		oss << "  add rax, rdi\n";
@@ -270,9 +279,10 @@ void Compiler::Tokenize() {
 			continue;
 		}
 
-		//‰‰ŽZŽq‚Ü‚½‚Í•¶––‚Ìê‡
+		//‰‰ŽZŽqAŠ‡ŒÊA•¶––‚È‚Ç‚Ì“ÁŽê•¶Žš
 		if (c == '+' || c == '-' || c == '*' || c == '/'
-			|| c == '(' || c == ')'|| c == ';' || c == '{' || c == '}') {
+			|| c == '(' || c == ')'|| c == '{' || c == '}'
+			|| c == ';' || c == '&') {
 			mTokenTbl.emplace_back(TokenType::Reserved, 0, ref, 1);
 			continue;
 		}

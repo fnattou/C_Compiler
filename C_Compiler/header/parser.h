@@ -13,15 +13,13 @@ class Parser {
 public:
 	enum class nodeType {
 		Expr,
-		Assign,  // = 
-		LocalVal,
-		//識別子との見分けのために_を追加している
+		Assign,			//代入
 		If_,
 		For_,
 		While_,
-		Block,
-		CallFunc,
-		DeclareFunc,
+		Block,			//複文
+		CallFunc,		//関数呼び出し
+		DeclareFunc,	//関数宣言
 		Add,
 		Sub,
 		Mul,
@@ -33,6 +31,9 @@ public:
 		Gt,
 		Ge,
 		Num,
+		LocalVal,		//ローカル変数
+		Addr,			//アドレス演算子
+		Deref,			//アドレス外し
 		Return,
 		None,
 	};
@@ -103,6 +104,8 @@ private:
 	//add        = mul ("+" mul | "-" mul)*
 	//mul        = unary ("*" unary | "/" unary)*
 	//unary      = ("+" | "-")? primary
+	//		    | "*" unary
+	//			| "&" unary
 	//primary    = num 
 	//			| ident ( "(" (ident "," )* ident? ")"　)?
 	//			| "(" expr ")"

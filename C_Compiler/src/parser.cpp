@@ -22,7 +22,7 @@ Parser::nodeType Parser::GetNodeType(const Token& token) const {
 	for (const auto& pair : map) {
 		if (token.isReserved(pair.first)) {
 			return pair.second;
-	}
+		}
 	}
 	return nodeType::None;
 }
@@ -224,6 +224,12 @@ Parser::Node* Parser::Unary() {
 		Node* node = PushBackNode(Node{ nodeType::Num, nullptr, nullptr, 0 });
 		return PushBackNode(Node{ nodeType::Sub, node, Primaly() });
 		}
+	case nodeType::Addr:
+		++mCurrentPos;
+		return PushBackNode(Node{ .type = nodeType::Addr, .rhs = Unary() });
+	case nodeType::Mul: //getnodeType‚Í'*'‚ðMul‚Æ‚µ‚Ä•Ô‚·, ‚±‚±‚Å‚Íderef
+		++mCurrentPos;
+		return PushBackNode(Node{ .type = nodeType::Deref, .rhs = Unary() });
 	default:
 		return Primaly();
 	}
