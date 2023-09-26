@@ -82,7 +82,7 @@ namespace makingAsmFile {
 namespace addAndSub {
 	TEST(CompilerTest, JustZero) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 0;"
 			"}";
 		COMPILE_AND_TEST(src,  "JustZero", 0);
@@ -91,7 +91,7 @@ namespace addAndSub {
 
 	TEST(CompilerTest, SomeCalc) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 1+1;"
 			"}";
 		COMPILE_AND_TEST(src,  "SomeCalc", 2);
@@ -99,7 +99,7 @@ namespace addAndSub {
 
 	TEST(CompilerTest, SomeSpace) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 1 + 2;"
 			"}";
 		COMPILE_AND_TEST(src,  "SomeSpace", 3);
@@ -107,7 +107,7 @@ namespace addAndSub {
 
 	TEST(CompilerTest, MultipleSpace) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 1 + 2 - 1 + 4;"
 			"}";
 		COMPILE_AND_TEST(src,  "MultipleSpace", 6);
@@ -119,7 +119,7 @@ namespace mulAndDiv {
 
 	TEST(CompilerTest, Mul) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 2 * 2;"
 			"}";
 		COMPILE_AND_TEST(src,  "Mul", 4);
@@ -127,7 +127,7 @@ namespace mulAndDiv {
 
 	TEST(CompilerTest, MulAndPlus) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 2 * 2 + 1;"
 			"}";
 		COMPILE_AND_TEST(src,  "MulAndPlus", 5);
@@ -135,7 +135,7 @@ namespace mulAndDiv {
 
 	TEST(CompilerTest, SimpleDiv) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 2 / 2;"
 			"}";
 		COMPILE_AND_TEST(src,  "SimpleDiv", 1);
@@ -143,7 +143,7 @@ namespace mulAndDiv {
 
 	TEST(CompilerTest, DivAndMinus) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 2 / 2 - 1;"
 			"}";
 		COMPILE_AND_TEST(src,  "DivAndMinus", 0);
@@ -151,7 +151,7 @@ namespace mulAndDiv {
 
 	TEST(CompilerTest, Priority) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 2 / 2 - (1 + 1);"
 			"}";
 		COMPILE_AND_TEST(src,  "Priority", -1);
@@ -159,7 +159,7 @@ namespace mulAndDiv {
 
 	TEST(CompilerTest, SinglePlus) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 2 * + 2;"
 			"}";
 		COMPILE_AND_TEST(src,  "SinglePlus", 4);
@@ -167,7 +167,7 @@ namespace mulAndDiv {
 
 	TEST(CompilerTest, SingleMinus) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 2 * - 2;"
 			"}";
 		COMPILE_AND_TEST(src,  "SingleMinus", -4);
@@ -177,7 +177,7 @@ namespace mulAndDiv {
 namespace comparison {
 	TEST(CompilerTest, Eq) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 1 == 1;"
 			"}";
 		COMPILE_AND_TEST(src,  "Eq", 1);
@@ -185,7 +185,7 @@ namespace comparison {
 
 	TEST(CompilerTest, Ne) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 1 != 1;"
 			"}";
 		COMPILE_AND_TEST(src,  "Ne", 0);
@@ -193,7 +193,7 @@ namespace comparison {
 	
 	TEST(CompilerTest, Le) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 0 <= 1;"
 			"}";
 		COMPILE_AND_TEST(src,  "Le", 1);
@@ -201,7 +201,7 @@ namespace comparison {
 	
 	TEST(CompilerTest, Lt) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 1 <= 1;"
 			"}";
 		COMPILE_AND_TEST(src,  "Lt", 1);
@@ -209,7 +209,7 @@ namespace comparison {
 	
 	TEST(CompilerTest, Ge) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 1 >= 1;"
 			"}";
 		COMPILE_AND_TEST(src,  "Ge", 1);
@@ -217,7 +217,7 @@ namespace comparison {
 	
 	TEST(CompilerTest, Gt) {
 		const auto src = 
-			"main() {"
+			"int main() {"
 			"return 1 > 1;"
 			"}";
 		COMPILE_AND_TEST(src,  "Gt", 0);
@@ -226,18 +226,10 @@ namespace comparison {
 
 
 namespace localVal {
-	TEST(CompilerTest, DeclareValue) {
-		const auto src = 
-			"main() {"
-			"return a = 1;"
-			"}";
-		COMPILE_AND_TEST(src,  "DeclareValue", 1);
-	}
-
 	TEST(CompilerTest, DeclareValueAndAdd) {
 		const auto src = 
-			"main() {"
-			"a = 1; a = a + 1;"
+			"int main() {"
+			"int a =  1; a = a + 1;"
 			"return a;"
 			"}";
 		COMPILE_AND_TEST(src,  "DeclareValueAndAdd",2);
@@ -247,8 +239,8 @@ namespace localVal {
 namespace MultiSentence {
 	TEST(CompilerTest, AddToVal) {
 		const auto src = 
-			"main() {"
-			"a = 1; a = a + 1;"
+			"int main() {"
+			"int a =  1; a = a + 1;"
 			"return a;"
 			"}";
 		COMPILE_AND_TEST(src,  "AddToVal", 2);
@@ -256,8 +248,8 @@ namespace MultiSentence {
 
 	TEST(CompilerTest, MulTwoVal) {
 		const auto src = 
-			"main() {"
-			"a = 5; b = 2;"
+			"int main() {"
+			"int a =  5; int b =  2;"
 			"return a * b;"
 			"}";
 		COMPILE_AND_TEST(src,  "MulTwoVal", 10);
@@ -266,8 +258,8 @@ namespace MultiSentence {
 
 	TEST(CompilerTest, CalcWithSomeVal) {
 		const auto src = 
-			"main() {"
-			"a = 3; b = 5 * 6 - 4;"
+			"int main() {"
+			"int a =  3; int b =  5 * 6 - 4;"
 			"return a + b / 2;"
 			"}";
 		COMPILE_AND_TEST(src,  "AddToVal" ,16);
@@ -275,8 +267,8 @@ namespace MultiSentence {
 
 	TEST(CompilerTest, LongNameLval) {
 		COMPILE_AND_TEST(
-			"main() {foo = 1;"
-			"bar = 2 + 3;"
+			"int main() {int foo = 1;"
+			"int bar = 2 + 3;"
 			"return foo + bar; }", 
 			"LongNameLval" ,6);
 	}
@@ -285,7 +277,7 @@ namespace MultiSentence {
 namespace returnTest {
 	TEST(CompilerTest, ReturnAValue) {
 		const auto src =
-			"main() {"
+			"int main() {"
 			"return 10;"
 			"}";
 		COMPILE_AND_TEST(src, "ReturnAValue" ,10);
@@ -293,9 +285,9 @@ namespace returnTest {
 
 	TEST(CompilerTest, ReturnSomeCalc) {
 		const auto src =
-			"main() {"
-			"a = 1;"
-			"b = 2 * 3;"
+			"int main() {"
+			"int a =  1;"
+			"int b =  2 * 3;"
 			"return a + b;"
 			"}";
 		COMPILE_AND_TEST(src, "ReturnSomeCalc", 7);
@@ -306,7 +298,7 @@ namespace returnTest {
 namespace branchTest {
 	TEST(CompilerTest, IfTest) {
 		const auto src =
-			"main() {"
+			"int main() {"
 			"if ( 0 < 1 )"
 			"10;"
 			"}";
@@ -315,7 +307,7 @@ namespace branchTest {
 
 	TEST(CompilerTest, IfAndElse) {
 		const auto src =
-			"main() {"
+			"int main() {"
 			"if ( 0 > 1 ) 2; "
 			"else 10;"
 			"}";
@@ -324,8 +316,8 @@ namespace branchTest {
 
 	TEST(CompilerTest, whileTest) {
 		const auto src =
-			"main() {"
-			"a = 1;"
+			"int main() {"
+			"int a =  1;"
 			"while ( a < 10 ) a = a + 1; "
 			"return a;"
 			"}";
@@ -335,10 +327,10 @@ namespace branchTest {
 
 	TEST(CompilerTest, ForTest) {
 		const auto src =
-			"main() {"
-			"a = 0;"
-			"for (i = 1; i <= 10; i = i + 1 )"
-			"a = a + i;"
+			"int main() {"
+			"int a =  0;"
+			"for (int i = 1; i <= 10; i = i + 1 )"
+			"a =  a + i;"
 			"}";
 		COMPILE_AND_TEST(src, "ForTest", 55);
 	}
@@ -349,9 +341,9 @@ namespace branchTest {
 namespace blockstate {
 	TEST(CompilerTest,  BlockWithFor) {
 		const auto src =
-			"main() {"
-			"a = 2;"
-			"for (i = 1; i <= 10; i = i + 1 )"
+			"int main() {"
+			"int a =  2;"
+			"for (int i = 1; i <= 10; i = i + 1 )"
 			"{"
 			"	a = a + i;"
 			"	a = a - i;"
@@ -365,10 +357,10 @@ namespace blockstate {
 namespace funcTest {
 	TEST(CompilerTest, FuncWithoutArgs) {
 		const auto src =
-			"func() {"
+			"int func() {"
 			"return 1;}"
-			"main() {"
-			"a = func();"
+			"int main() {"
+			"int a =  func();"
 			"return a;"
 			"}";
 		COMPILE_AND_TEST(src, "FuncWithoutArgs", 1);
@@ -376,10 +368,10 @@ namespace funcTest {
 
 	TEST(CompilerTest, FuncWithArgs) {
 		const auto src =
-			"func(b) {"
+			"int func(int b) {"
 			"return b + 1;}"
-			"main() {"
-			"a = func(2 + 2);"
+			"int main() {"
+			"int a =  func(2 + 2);"
 			"return a;"
 			"}";
 		COMPILE_AND_TEST(src, "FuncWithArgs", 5);
@@ -390,9 +382,9 @@ namespace funcTest {
 namespace addresTest {
 	TEST(CompilerTest, AddressAndDeref) {
 		const auto src =
-			"main() {"
-			"a = 3;"
-			"b = &a;"
+			"int main() {"
+			"int a =  3;"
+			"int b =  &a;"
 			"return *b;"
 			"}";
 		COMPILE_AND_TEST(src, "AddressAndDeref", 3);
