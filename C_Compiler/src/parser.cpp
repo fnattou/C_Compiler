@@ -34,10 +34,18 @@ void Parser::Program() {
 }
 
 Parser::Node* Parser::Function() {
+	//返り値の型
+	if (!getCurTk().isReserved("int")) {
+		std::cerr << "関数の返り値の型が宣言されていません" << std::endl;
+		assert(0);
+	}
+	++mCurrentPos;
+
 	Node n{ .type = nodeType::DeclareFunc }; 
 	mFuncInfoTbl.emplace(getCurTk().mStr,  FuncInfo{ .name = getCurTk().mStr });
 	mCurrentFuncInfoPtr = &mFuncInfoTbl[getCurTk().mStr];
 	n.funcInfoPtr = mCurrentFuncInfoPtr;
+
 	//関数名
 	if (!getCurTk().isIdent()) {
 		std::cerr << "関数宣言から始まっていません" << std::endl;
@@ -48,6 +56,11 @@ Parser::Node* Parser::Function() {
 	//引数部分
 	getCurTk().expect('('); ++mCurrentPos;
 	while (!getCurTk().isReserved(')')) {
+		if (!getCurTk().isReserved("int")) {
+			std::cerr << "仮引数の型が指定されていません" << std::endl;
+			assert(0);
+		}
+		++mCurrentPos;
 		const int ofs = (mCurrentFuncInfoPtr->lValMap.size() + 1) * 8;
 		mCurrentFuncInfoPtr->lValMap.emplace(getCurTk().mStr, ofs);
 		auto p = PushBackNode(Node{ .type = nodeType::LocalVal, .offset = ofs });
@@ -243,11 +256,21 @@ Parser::Node* Parser::Primaly() {
 		mTokenTbl[mCurrentPos++].expect(')');
 		return node;
 	}
-	//変数名もしくは関数名
-	if (t.isIdent()) {
+	//新しい変数の宣言
+	if (t.isReserved("int")) {
+		t = mTokenTbl[mCurrentPos++];
+		assert(t.isIdent());
 
+		//変数宣言
+		assert(!mCurrentFuncInfoPtr->lValMap.contains(t.mStr));
+		const int ofs = (mCurrentFuncInfoPtr->lValMap.size() + 1) * 8;
+		mCurrentFuncInfoPtr->lValMap.emplace(t.mStr, ofs);
+		return PushBackNode(Node{ .type = nodeType::LocalVal, .offset = ofs });
+	}
+	else if (t.isIdent()) {
 		//"(" が続くなら関数呼び出し
 		if (mTokenTbl[mCurrentPos].isReserved("(")) {
+			assert(mFuncInfoTbl.contains(t.mStr));
 			Node n{ .type = nodeType::CallFunc , .funcInfoPtr = &mFuncInfoTbl[t.mStr]};
 			++mCurrentPos;
 			while (!getCurTk().isReserved(")")) {
@@ -258,16 +281,12 @@ Parser::Node* Parser::Primaly() {
 			return PushBackNode(n);
 		}
 
-		//変数
-		if (mCurrentFuncInfoPtr->lValMap.contains(t.mStr)) {
-			return PushBackNode(Node{
+		//宣言された変数の呼び出し
+		assert(mCurrentFuncInfoPtr->lValMap.contains(t.mStr));
+		return PushBackNode(Node{
 				.type = nodeType::LocalVal,
 				.offset = mCurrentFuncInfoPtr->lValMap.at(t.mStr)
 				});
-		}
-		const int ofs = (mCurrentFuncInfoPtr->lValMap.size() + 1) * 8;
-		mCurrentFuncInfoPtr->lValMap.emplace(t.mStr, ofs);
-		return PushBackNode(Node{ .type = nodeType::LocalVal, .offset = ofs });
 	}
 
 	// そうでなければ数値のはず

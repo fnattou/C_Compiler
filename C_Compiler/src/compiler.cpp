@@ -297,7 +297,7 @@ void Compiler::Tokenize() {
 			continue;
 		}
 
-		//—\–ñŒê‚©”»’f‚·‚éŠÖ”
+		//“ü—Í‚ÆŒ»İ‚İ‚Ä‚¢‚é’PŒê‚ª“™‚µ‚¢‚©”»’f‚·‚éŠÖ”
 		const auto checkWord = [&](string_view sv) { 
 			if (isValidIdx(i + sv.size() - 1) && memcmp(ref, sv.data(), sv.size()) == 0) {
 				//—\–ñŒê‚ÌŸ‚ª•¶š‚Å‚ ‚éê‡‚Í•Ï”éŒ¾‚É‚È‚éB—á@returnHoge, if3, forcast
@@ -309,7 +309,7 @@ void Compiler::Tokenize() {
 		};
 		//—\–ñŒê‚Ìê‡B•Ï”éŒ¾‚æ‚èæ‚É”»’f‚·‚é
 		bool isContinue = false;
-		for (string_view str : {"return", "if", "while", "for", "else" }) {
+		for (string_view str : {"return", "if", "while", "for", "else", "int"}) {
 			if (checkWord(str)) {
 				const auto type = (str == "return") ? TokenType::Return : TokenType::Reserved;
 				mTokenTbl.emplace_back(type, 0,  ref, str.size());
@@ -319,7 +319,7 @@ void Compiler::Tokenize() {
 			}
 		}
 		if (isContinue) continue;
-
+		
 		//•Ï”éŒ¾‚Ìê‡
 		if (isalpha(c)) {
 			int len = 1;
