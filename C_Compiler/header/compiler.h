@@ -29,7 +29,7 @@ private:
 	void ReadNodeTree(Parser::Node& node, NodeTblInfo& info);
 
 	//左辺値としてノードを読みこんで、コードを生成する
-	void ReadLValueNode(Parser::Node& node);
+	void ReadLValueNode(Parser::Node& node, NodeTblInfo& info);
 
 	//関数としてノードを読んでコードを生成する
 	void ReadFuncNode(Parser::Node& node);

@@ -38,6 +38,7 @@ public:
 		None,
 	};
 	struct FuncInfo;
+	struct ValTypeInfo;
 	struct Node {
 		nodeType type;
 		Node* lhs;
@@ -46,20 +47,32 @@ public:
 		int val; //typeがNumのときだけ使う
 		int offset; //typeがLocalValの時だけ使う
 		vector<Node*> innerBlockNodeTbl; // typeがBlockの時だけ使う
-		vector<Node*> argumentNodeTbl; // typeがCallFuncの時だけ使う
+		vector<Node*> argumentNodeTbl; // typeがCallFuncの時だけ使う実引数情報
 		FuncInfo* funcInfoPtr; //typeがFuncのときだけ使う
+		ValTypeInfo* valTypeInfoPtr; //変数の時の型情報
 	};
 
 	struct FuncInfo {
 		string_view name;
 		unordered_map<string_view, int> lValMap;
-		vector<Node*> argumentNodeTbl; 
+		vector<Node*> argumentNodeTbl; //仮引数情報
+		ValTypeInfo* returnValTypeInfoPtr; //返り値の型情報
 	};
 
+	struct ValTypeInfo {
+		enum class ValType {
+			Int,
+			Ptr,
+		} type;
+		ValTypeInfo* toPtr;
+	};
 
 	// ローカル変数のスタックからのオフセットを保存するための型
 	unordered_map<string_view, int> mLValMap;
 	unordered_map<string_view, FuncInfo> mFuncInfoTbl;
+	//変数の型情報の保存場所
+	vector<ValTypeInfo> mTypeInfoTbl;
+
 	FuncInfo* mCurrentFuncInfoPtr;
 	
 	vector<Node> mNodeTbl;
@@ -126,7 +139,13 @@ private:
 	Node* PushBackNode(Node n);
 
 	//トークンを調べて該当するノードタイプを返す
-	nodeType GetNodeType(const Token& token) const ;
+	nodeType GetNodeType(const Token& token) const;
+
+	/// <summary>
+	/// 変数宣言を読み込んで、型情報を得る
+	/// </summary>
+	/// <returns>型情報リンクリストの頭。宣言でないときにはnullptr</returns>
+	ValTypeInfo* ReadValueType();
 
 	bool isEndOfState() {
 		assert(mCurrentPos < mTokenTbl.size());

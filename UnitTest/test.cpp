@@ -389,4 +389,15 @@ namespace addresTest {
 			"}";
 		COMPILE_AND_TEST(src, "AddressAndDeref", 3);
 	}
+
+	TEST(CompilerTest, AddresAndDeref2) {
+		const auto src =
+			"int main() {"
+			"int a =  3;"
+			"int b =  &a;"
+			"*b = 5;"
+			"return a;"
+			"}";
+		COMPILE_AND_TEST(src, "AddresAndDeref2", 5);
+	}
 }

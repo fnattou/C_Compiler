@@ -36,15 +36,27 @@ void Compiler::OutputFile(string filename) {
 	wf.close();
 }
 
-void Compiler::ReadLValueNode(Parser::Node& node) {
-	using Node = Parser::Node; using Type = Parser::nodeType;
-	if (node.type != Type::LocalVal) {
-		std::cerr << "代入の左辺値が変数ではありません";
+void Compiler::ReadLValueNode(Parser::Node& node, NodeTblInfo& info) {
+	using Node = Parser::Node; using enum Parser::nodeType;
+	if (node.type == LocalVal) {
+		oss << "  mov rax, rbp\n";
+		oss << "  sub rax, " << node.offset << "\n";
+		oss << "  push  rax\n";
+		return;
 	}
 
-	oss << "  mov rax, rbp\n";
-	oss << "  sub rax, " << node.offset <<"\n";	
-	oss << "  push  rax\n";
+	//  *      a      =       1   ;
+	//Deref   LVal  Assign   Num
+	//の左辺値を読み込む
+	if (node.type == Deref) {
+		ReadLValueNode(*node.rhs, info);
+		oss << "  pop rax\n";
+		oss << "  push [rax]\n";
+		return;
+	}
+
+	std::cerr << "ReadLValueNodeに正しくないノードが入力されています" << std::endl;
+	assert(false);
 }
 
 void Compiler::ReadFuncNode(Parser::Node& node) {
@@ -96,7 +108,7 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		oss << "  push " << node.val << "\n";
 		return;
 	case Type::Assign:
-		ReadLValueNode(*node.lhs);
+		ReadLValueNode(*node.lhs, info);
 		ReadNodeTree(*node.rhs, info);
 		oss << "  pop rdi\n";
 		oss << "  pop rax\n";
@@ -105,7 +117,7 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		return;
 	case Type::LocalVal:
 
-		ReadLValueNode(node);
+		ReadLValueNode(node, info);
 		oss << "  pop rax\n";
 		oss << "  mov rax, [rax]\n";
 		oss << "  push rax\n";
@@ -196,7 +208,7 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		ReadFuncNode(node);
 		return;	
 	case Type::Addr:
-		ReadLValueNode(*node.rhs);
+		ReadLValueNode(*node.rhs, info);
 		return;
 	case Type::Deref:
 		ReadNodeTree(*node.rhs, info);

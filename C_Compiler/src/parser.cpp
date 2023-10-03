@@ -35,14 +35,18 @@ void Parser::Program() {
 
 Parser::Node* Parser::Function() {
 	//返り値の型
-	if (!getCurTk().isReserved("int")) {
+	ValTypeInfo* typeInfoPtr = ReadValueType();
+	if (!typeInfoPtr) {
 		std::cerr << "関数の返り値の型が宣言されていません" << std::endl;
 		assert(0);
 	}
-	++mCurrentPos;
 
 	Node n{ .type = nodeType::DeclareFunc }; 
-	mFuncInfoTbl.emplace(getCurTk().mStr,  FuncInfo{ .name = getCurTk().mStr });
+	mFuncInfoTbl.emplace( getCurTk().mStr, 
+		FuncInfo{ 
+			.name = getCurTk().mStr ,
+			.returnValTypeInfoPtr = typeInfoPtr
+		});
 	mCurrentFuncInfoPtr = &mFuncInfoTbl[getCurTk().mStr];
 	n.funcInfoPtr = mCurrentFuncInfoPtr;
 
@@ -249,25 +253,31 @@ Parser::Node* Parser::Unary() {
 }
 
 Parser::Node* Parser::Primaly() {
-	Token& t = mTokenTbl[mCurrentPos++];
+	Token t = mTokenTbl[mCurrentPos];
 	//次のトークンが"("なら、"(" expr ")"のはず	
 	if (t.isReserved('(')) {
+		mCurrentPos++;
 		Node* node = Expr();
 		mTokenTbl[mCurrentPos++].expect(')');
 		return node;
 	}
-	//新しい変数の宣言
-	if (t.isReserved("int")) {
-		t = mTokenTbl[mCurrentPos++];
-		assert(t.isIdent());
 
+	//新しい変数の宣言
+	if (auto* typeInfoPtr = ReadValueType(); typeInfoPtr) {
 		//変数宣言
+		t = getCurTk(); ++mCurrentPos;
 		assert(!mCurrentFuncInfoPtr->lValMap.contains(t.mStr));
 		const int ofs = (mCurrentFuncInfoPtr->lValMap.size() + 1) * 8;
 		mCurrentFuncInfoPtr->lValMap.emplace(t.mStr, ofs);
-		return PushBackNode(Node{ .type = nodeType::LocalVal, .offset = ofs });
+		return PushBackNode(Node{ 
+			.type = nodeType::LocalVal, 
+			.offset = ofs , 
+			.valTypeInfoPtr = typeInfoPtr
+			});
 	}
-	else if (t.isIdent()) {
+
+	if (t.isIdent()) {
+		mCurrentPos++;
 		//"(" が続くなら関数呼び出し
 		if (mTokenTbl[mCurrentPos].isReserved("(")) {
 			assert(mFuncInfoTbl.contains(t.mStr));
@@ -290,7 +300,23 @@ Parser::Node* Parser::Primaly() {
 	}
 
 	// そうでなければ数値のはず
+	mCurrentPos++;
 	return PushBackNode(Node{ .type = nodeType::Num, .val = t.expectNumber()});
+}
+
+
+Parser::ValTypeInfo* Parser::ReadValueType(){
+	if (!getCurTk().isReserved("int")) {
+		return nullptr;
+	}
+	++mCurrentPos;
+	using enum ValTypeInfo::ValType;
+	ValTypeInfo* retPtr = &mTypeInfoTbl.emplace_back(Int, nullptr);
+	while (getCurTk().isReserved("*")) {
+		ValTypeInfo* retPtr = &mTypeInfoTbl.emplace_back(Ptr, retPtr);
+		++mCurrentPos;
+	}
+	return retPtr;
 }
 
 
