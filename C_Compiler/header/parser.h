@@ -49,14 +49,22 @@ public:
 		vector<Node*> innerBlockNodeTbl; // typeがBlockの時だけ使う
 		vector<Node*> argumentNodeTbl; // typeがCallFuncの時だけ使う実引数情報
 		FuncInfo* funcInfoPtr; //typeがFuncのときだけ使う
-		ValTypeInfo* valTypeInfoPtr; //変数の時の型情報
+		const ValTypeInfo* valTypeInfoPtr; //変数の時の型情報
 	};
 
 	struct FuncInfo {
 		string_view name;
-		unordered_map<string_view, int> lValMap;
+		unordered_map<string_view, int> lValOfsMap;
+		unordered_map<string_view, const ValTypeInfo*> lValTypeMap;
 		vector<Node*> argumentNodeTbl; //仮引数情報
 		ValTypeInfo* returnValTypeInfoPtr; //返り値の型情報
+		size_t totalBytes; //ローカル変数のサイズ合計
+		size_t pushBackToValMap(string_view name, size_t byteSize, const ValTypeInfo* ptr) {
+			lValTypeMap.emplace(name, ptr);
+			totalBytes += byteSize;
+			lValOfsMap.emplace(name, totalBytes);
+			return totalBytes;
+		}
 	};
 
 	struct ValTypeInfo {
@@ -65,10 +73,13 @@ public:
 			Ptr,
 		} type;
 		ValTypeInfo* toPtr;
+		int getByteSize() const {
+			return (type == ValType::Int) ? 4 : 8;
+		}
 	};
 
 	// ローカル変数のスタックからのオフセットを保存するための型
-	unordered_map<string_view, int> mLValMap;
+	unordered_map<string_view, int> mlValOfsMap;
 	unordered_map<string_view, FuncInfo> mFuncInfoTbl;
 	//変数の型情報の保存場所
 	vector<ValTypeInfo> mTypeInfoTbl;
@@ -84,7 +95,7 @@ public:
 	}
 
 	size_t getTotalBytesOfLVal() {
-		return mLValMap.size() * 8;
+		return mlValOfsMap.size() * 8;
 	}
 
 

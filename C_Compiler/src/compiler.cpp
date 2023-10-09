@@ -70,26 +70,31 @@ void Compiler::ReadFuncNode(Parser::Node& node) {
 	// 領域を確保する（実引数もここに入っているはず)
 	oss << "  push rbp\n";
 	oss << "  mov rbp, rsp\n";
-	oss << "  sub rsp, " << infoPtr->lValMap.size() * 8 << "\n";
+	oss << "  sub rsp, " << infoPtr->totalBytes << "\n";
 
 	//プロローグ２ : 引数が格納されているレジスタから実引数用の変数に移す
 	for (size_t i = 0; i < infoPtr->argumentNodeTbl.size(); ++i) {
 		auto reg = argRegisterTbl[i];
+		if (infoPtr->argumentNodeTbl[i]->valTypeInfoPtr->getByteSize() == 4) {
+			reg = argRegisterTbl[i + 6];
+		}
 		auto ofs = infoPtr->argumentNodeTbl[i]->offset;
 		oss << "  mov [rbp -  " << ofs << "], " << reg << "\n";	
 	}
 
 	//先頭の式から順にコードを生成
 	NodeTblInfo info{ node.innerBlockNodeTbl, 0 };
-	while (!info.isEndOfTbl()) {
+	while (1) {
 		ReadNodeTree(info.getCurNode(), info);
 		info.currentNodeTblIdx++;
+		if (info.isEndOfTbl()) break;
 		//式の評価結果としてスタックに一つの値が残っているはずなので
 		//スタックが溢れないようにポップしておく
 		oss << "  pop rax\n";
 	}
 
-	//エピローグ : 最後の式の結果がRAXに残っているのでそれを返り値とする
+	//エピローグ : 最後の式の結果がRAXに残っているのでそれを返り値とする(return文の場合は除く)
+	if (info.nodeTbl.back()->type == Parser::nodeType::Return)  return;
 	oss << "  mov rsp, rbp\n";
 	oss << "  pop rbp\n";
 	oss << "  ret\n";
@@ -112,14 +117,24 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		ReadNodeTree(*node.rhs, info);
 		oss << "  pop rdi\n";
 		oss << "  pop rax\n";
-		oss << "  mov [rax], rdi\n";
+		if (node.lhs->valTypeInfoPtr->getByteSize() == 4) {
+			oss << "  mov [rax], edi\n";
+		}
+		else {
+			oss << "  mov [rax], rdi\n";
+		}
 		oss << "  push rdi\n";
 		return;
 	case Type::LocalVal:
 
 		ReadLValueNode(node, info);
 		oss << "  pop rax\n";
-		oss << "  mov rax, [rax]\n";
+		if (node.valTypeInfoPtr->getByteSize() == 4) {
+			oss << "  mov eax, [rax]\n";
+		}
+		else {
+			oss << "  mov rax, [rax]\n";
+		}
 		oss << "  push rax\n";
 		return;
 	case Type::Return:

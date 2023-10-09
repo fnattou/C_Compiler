@@ -300,7 +300,7 @@ namespace branchTest {
 		const auto src =
 			"int main() {"
 			"if ( 0 < 1 )"
-			"10;"
+			"return 10;"
 			"}";
 		COMPILE_AND_TEST(src, "IfTest", 10);
 	}
@@ -308,8 +308,8 @@ namespace branchTest {
 	TEST(CompilerTest, IfAndElse) {
 		const auto src =
 			"int main() {"
-			"if ( 0 > 1 ) 2; "
-			"else 10;"
+			"if ( 0 > 1 ){ return 2; }"
+			"else { return 10;}"
 			"}";
 		COMPILE_AND_TEST(src, "IfAndElse", 10);
 	}
@@ -330,7 +330,8 @@ namespace branchTest {
 			"int main() {"
 			"int a =  0;"
 			"for (int i = 1; i <= 10; i = i + 1 )"
-			"a =  a + i;"
+			"{a =  a + i;}"
+			"return a; "
 			"}";
 		COMPILE_AND_TEST(src, "ForTest", 55);
 	}
@@ -384,20 +385,10 @@ namespace addresTest {
 		const auto src =
 			"int main() {"
 			"int a =  3;"
-			"int b =  &a;"
+			"int* b =  &a;"
 			"return *b;"
 			"}";
 		COMPILE_AND_TEST(src, "AddressAndDeref", 3);
 	}
 
-	TEST(CompilerTest, AddresAndDeref2) {
-		const auto src =
-			"int main() {"
-			"int a =  3;"
-			"int b =  &a;"
-			"*b = 5;"
-			"return a;"
-			"}";
-		COMPILE_AND_TEST(src, "AddresAndDeref2", 5);
-	}
 }

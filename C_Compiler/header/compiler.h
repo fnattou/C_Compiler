@@ -40,7 +40,9 @@ private:
 	}
 
 	//関数に引数を渡すときに使用するレジスタ配列
-	static constexpr const char* argRegisterTbl[] = {"rdi", "rsi" ,"rdx", "rcx", "r8", "r9"};
+	static constexpr const char* argRegisterTbl[] = {
+		"rdi", "rsi" ,"rdx", "rcx", "r8", "r9", "edi", "esi", "edx"
+	};
 	string mSrcStr;
 	std::ostringstream oss;
 	std::vector<Token> mTokenTbl;

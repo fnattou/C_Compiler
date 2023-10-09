@@ -60,14 +60,17 @@ Parser::Node* Parser::Function() {
 	//à¯êîïîï™
 	getCurTk().expect('('); ++mCurrentPos;
 	while (!getCurTk().isReserved(')')) {
-		if (!getCurTk().isReserved("int")) {
+		const ValTypeInfo* infoPtr = ReadValueType();
+		if (!infoPtr) {
 			std::cerr << "âºà¯êîÇÃå^Ç™éwíËÇ≥ÇÍÇƒÇ¢Ç‹ÇπÇÒ" << std::endl;
 			assert(0);
 		}
-		++mCurrentPos;
-		const int ofs = (mCurrentFuncInfoPtr->lValMap.size() + 1) * 8;
-		mCurrentFuncInfoPtr->lValMap.emplace(getCurTk().mStr, ofs);
-		auto p = PushBackNode(Node{ .type = nodeType::LocalVal, .offset = ofs });
+		const int ofs = mCurrentFuncInfoPtr->pushBackToValMap(
+			getCurTk().mStr, infoPtr->getByteSize(), infoPtr
+			);
+		auto p = PushBackNode(Node{
+			.type = nodeType::LocalVal, .offset = ofs, .valTypeInfoPtr = infoPtr
+			});
 		mCurrentFuncInfoPtr->argumentNodeTbl.push_back(p);
 		++mCurrentPos;
 	}
@@ -266,9 +269,13 @@ Parser::Node* Parser::Primaly() {
 	if (auto* typeInfoPtr = ReadValueType(); typeInfoPtr) {
 		//ïœêîêÈåæ
 		t = getCurTk(); ++mCurrentPos;
-		assert(!mCurrentFuncInfoPtr->lValMap.contains(t.mStr));
-		const int ofs = (mCurrentFuncInfoPtr->lValMap.size() + 1) * 8;
-		mCurrentFuncInfoPtr->lValMap.emplace(t.mStr, ofs);
+		assert(!mCurrentFuncInfoPtr->lValOfsMap.contains(t.mStr));
+		assert(!mCurrentFuncInfoPtr->lValTypeMap.contains(t.mStr));
+		const int ofs = mCurrentFuncInfoPtr->pushBackToValMap(
+			t.mStr, typeInfoPtr->getByteSize(), typeInfoPtr
+			);
+		mCurrentFuncInfoPtr->lValOfsMap.emplace(t.mStr, ofs);
+		mCurrentFuncInfoPtr->lValTypeMap.emplace(t.mStr, typeInfoPtr);
 		return PushBackNode(Node{ 
 			.type = nodeType::LocalVal, 
 			.offset = ofs , 
@@ -292,10 +299,12 @@ Parser::Node* Parser::Primaly() {
 		}
 
 		//êÈåæÇ≥ÇÍÇΩïœêîÇÃåƒÇ—èoÇµ
-		assert(mCurrentFuncInfoPtr->lValMap.contains(t.mStr));
+		assert(mCurrentFuncInfoPtr->lValOfsMap.contains(t.mStr));
+		assert(mCurrentFuncInfoPtr->lValTypeMap.contains(t.mStr));
 		return PushBackNode(Node{
 				.type = nodeType::LocalVal,
-				.offset = mCurrentFuncInfoPtr->lValMap.at(t.mStr)
+				.offset = mCurrentFuncInfoPtr->lValOfsMap.at(t.mStr),
+				.valTypeInfoPtr = mCurrentFuncInfoPtr->lValTypeMap.at(t.mStr)
 				});
 	}
 
@@ -313,7 +322,7 @@ Parser::ValTypeInfo* Parser::ReadValueType(){
 	using enum ValTypeInfo::ValType;
 	ValTypeInfo* retPtr = &mTypeInfoTbl.emplace_back(Int, nullptr);
 	while (getCurTk().isReserved("*")) {
-		ValTypeInfo* retPtr = &mTypeInfoTbl.emplace_back(Ptr, retPtr);
+		retPtr = &mTypeInfoTbl.emplace_back(Ptr, retPtr);
 		++mCurrentPos;
 	}
 	return retPtr;
@@ -326,7 +335,8 @@ void Parser::Parse(vector<Token>& tokenTbl) {
 	//âÒîçÙÇ∆ÇµÇƒëΩÇﬂÇ…Ç∆Ç¡ÇƒÇ®Ç≠
 	mNodeTbl.reserve(tokenTbl.size() * 10);
 	mRootNodeTbl.reserve(tokenTbl.size());
-		if (mTokenTbl.size() > 0) {
+	mTypeInfoTbl.reserve(tokenTbl.size());
+	if (mTokenTbl.size() > 0) {
 		Program();
 	}
 }
