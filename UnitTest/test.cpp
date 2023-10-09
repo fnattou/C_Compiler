@@ -403,3 +403,31 @@ namespace addresTest {
 		COMPILE_AND_TEST(src, "PointerCalc", 1);
 	}
 }
+
+namespace sizeofTest {
+	TEST(CompilerTest, sizeofNum) {
+		const auto src =
+			"int main() {"
+			"return sizeof(1);"
+			"}";
+		COMPILE_AND_TEST(src, "sizeofNum", 4);
+	}
+
+	TEST(CompilerTest, sizeofSomeCalcWithPointer) {
+		const auto src =
+			"int main() {"
+			"int* b;"
+			"return sizeof(b + 1);"
+			"}";
+		COMPILE_AND_TEST(src, "sizeofSomeCalcWithPointer", 8);
+	}
+
+	TEST(CompilerTest, sizeofSomeCalcWithInt) {
+		const auto src =
+			"int main() {"
+			"int b;"
+			"return sizeof(b * 1);"
+			"}";
+		COMPILE_AND_TEST(src, "sizeofSomeCalcWithInt", 4);
+	}
+}
