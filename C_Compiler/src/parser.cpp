@@ -277,13 +277,16 @@ Parser::Node* Parser::Primaly() {
 
 	//V‚µ‚¢•Ï”‚ÌéŒ¾
 	if (auto* typeInfoPtr = ReadValueType(); typeInfoPtr) {
-		//•Ï”éŒ¾
+		//•Ï”–¼‚ð“Ç‚Þ
 		t = getCurTk(); ++mCurrentPos;
+		//“o˜^‚³‚ê‚½Šù‘¶‚Ì•Ï”‚É“¯–¼‚Ì‚à‚Ì‚Í‚È‚¢‚Í‚¸
 		assert(!mCurrentFuncInfoPtr->lValOfsMap.contains(t.mStr));
 		assert(!mCurrentFuncInfoPtr->lValTypeMap.contains(t.mStr));
+		//V‚µ‚­•Ï”‚ð“o˜^
 		const int ofs = mCurrentFuncInfoPtr->pushBackToValMap(
 			t.mStr, typeInfoPtr->getByteSize(), typeInfoPtr
 			);
+
 		return &mNodeTbl.emplace_back(Node{ 
 			.type = nodeType::LocalVal, 
 			.offset = ofs , 

@@ -320,17 +320,28 @@ void Compiler::Tokenize() {
 	for (size_t i = 0; i < mSrcStr.size(); ++i) {
 		char* ref = &mSrcStr[i];
 		const auto c = mSrcStr[i];
+
+		//スペースや改行はスキップする
 		if (isspace(c) || c == '\r' || c == '\n' || c == '\t') {
 			continue;
 		}
 
 		//演算子、括弧、文末などの特殊文字
-		if (c == '+' || c == '-' || c == '*' || c == '/'
-			|| c == '(' || c == ')'|| c == '{' || c == '}'
-			|| c == ';' || c == '&') {
-			mTokenTbl.emplace_back(TokenType::Reserved, 0, ref, 1);
-			continue;
+		{
+			bool isContinue = false;
+			for (const auto sc : {
+				'+', '-', '*', '/',
+				'(', ')', '{', '}',
+				';', '&', '[', ']' }) {
+				if (c == sc) {
+					mTokenTbl.emplace_back(TokenType::Reserved, 0, ref, 1);
+					isContinue = true;
+					break;
+				}
+			}
+			if (isContinue) continue;
 		}
+
 		//演算子で二文字の可能性がある場合
 		if (c == '=' || c == '<' || c == '>' || c == '!') {
 			int len = 1;
@@ -342,28 +353,27 @@ void Compiler::Tokenize() {
 			continue;
 		}
 
-		//入力と現在みている単語が等しいか判断する関数
-		const auto checkWord = [&](string_view sv) { 
-			if (isValidIdx(i + sv.size() - 1) && memcmp(ref, sv.data(), sv.size()) == 0) {
-				//予約語の次が文字である場合は変数宣言になる。例　returnHoge, if3, forcast
-				if (isValidIdx(i + sv.size()) && !isalnum(mSrcStr[i + sv.size()])) {
-					return true;
-				}
-			}
-			return false;
-		};
 		//予約語の場合。変数宣言より先に判断する
-		bool isContinue = false;
-		for (string_view str : {"return", "if", "while", "for", "else", "int", "sizeof"}) {
-			if (checkWord(str)) {
+		{
+			bool isContinue = false;
+			for (string_view str : {"return", "if", "while", "for", "else", "int", "sizeof"}) {
+				//strと現在見ている文字列が等しいか
+				if (!isValidIdx(i + str.size() - 1) || memcmp(ref, str.data(), str.size()) != 0) {
+					continue;
+				}
+				//予約語の次が文字である場合は変数宣言になる。例　returnHoge, if3, forcast
+				if (isValidIdx(i + str.size()) && isalnum(mSrcStr[i + str.size()])) {
+					continue;
+				}
 				const auto type = (str == "return") ? TokenType::Return : TokenType::Reserved;
-				mTokenTbl.emplace_back(type, 0,  ref, str.size());
+				mTokenTbl.emplace_back(type, 0, ref, str.size());
+
 				//次のループの先頭でまた++iが行われるので、ここではsize - 1を足す
 				i += str.size() - 1;
 				isContinue = true; break;
 			}
+			if (isContinue) continue;
 		}
-		if (isContinue) continue;
 		
 		//変数宣言の場合
 		if (isalpha(c)) {
