@@ -391,4 +391,15 @@ namespace addresTest {
 		COMPILE_AND_TEST(src, "AddressAndDeref", 3);
 	}
 
+	TEST(CompilerTest, PointerCalc) {
+		const auto src =
+			"int main() {"
+			"int a =  1;"
+			"int b = 2;"
+			"int* c =  &b;"
+			"int* d = c + 1;"
+			"return *d;"
+			"}";
+		COMPILE_AND_TEST(src, "PointerCalc", 1);
+	}
 }

@@ -78,6 +78,12 @@ public:
 		int getByteSize() const {
 			return (type == ValType::Int) ? 4 : 8;
 		}
+
+		//ポインタがさす型のサイズを取得
+		int getToTypeSize() const {
+			if (!toPtr) return 0;
+			return toPtr->getByteSize();
+		}
 	};
 
 	// ローカル変数のスタックからのオフセットを保存するための型

@@ -116,7 +116,7 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 	case Type::Assign:
 		ReadLValueNode(*node.lhs, info);
 		ReadNodeTree(*node.rhs, info);
-		oss << "  pop rdi\n";
+		oss << "\n  pop rdi\n";
 		oss << "  pop rax\n";
 		if (node.lhs->valTypeInfoPtr->getByteSize() == 4) {
 			oss << "  mov [rax], edi\n";
@@ -124,11 +124,11 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		else {
 			oss << "  mov [rax], rdi\n";
 		}
-		oss << "  push rdi\n";
+		oss << "  push rdi\n\n";
 		return;
 	case Type::LocalVal:
 		ReadLValueNode(node, info);
-		oss << "  pop rax\n";
+		oss << "\n  pop rax\n";
 		if (node.valTypeInfoPtr->getByteSize() == 4) {
 			oss << "  mov eax, [rax]\n";
 		}
@@ -246,13 +246,31 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 
 	oss << "  pop rdi\n";
 	oss << "  pop rax\n";
+	
+	//左辺がポインタ変数の場合、ポインタがさす型のサイズ分だけずらす
+	const auto mulRvalueForToTypesSize = [this](Node& node) {
+		//左辺の一番左側を探して
+		Node* valNodePtr = node.lhs;
+		while (valNodePtr->lhs) valNodePtr = valNodePtr->lhs;
+
+		//ポインタ変数のとき、ポインタのさす型のサイズを取得
+		if (valNodePtr->type == Parser::nodeType::LocalVal
+			&& valNodePtr->valTypeInfoPtr->type == Parser::ValTypeInfo::ValType::Ptr) {
+			const auto size = valNodePtr->valTypeInfoPtr->getToTypeSize();
+
+			//本来足す(または引く)べき数にサイズをかける
+			oss << "  imul rdi, " << size << "\n";
+		}
+	};
 
 	//演算子の場合
 	switch (node.type) {
 	case Type::Add:
+		mulRvalueForToTypesSize(node);
 		oss << "  add rax, rdi\n";
 		break;
 	case Type::Sub:	
+		mulRvalueForToTypesSize(node);
 		oss << "  sub rax, rdi\n";
 		break;
 	case Type::Mul:
