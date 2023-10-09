@@ -75,6 +75,7 @@ void Compiler::ReadFuncNode(Parser::Node& node) {
 	//プロローグ２ : 引数が格納されているレジスタから実引数用の変数に移す
 	for (size_t i = 0; i < infoPtr->argumentNodeTbl.size(); ++i) {
 		auto reg = argRegisterTbl[i];
+		//サイズが4バイトの場合、edi, esiなど32bitレジスタを使用する
 		if (infoPtr->argumentNodeTbl[i]->valTypeInfoPtr->getByteSize() == 4) {
 			reg = argRegisterTbl[i + 6];
 		}
@@ -126,7 +127,6 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		oss << "  push rdi\n";
 		return;
 	case Type::LocalVal:
-
 		ReadLValueNode(node, info);
 		oss << "  pop rax\n";
 		if (node.valTypeInfoPtr->getByteSize() == 4) {

@@ -2,11 +2,6 @@
 #include "parser.h"
 #include <iostream>
 
-Parser::Node* Parser::PushBackNode(Node n) {
-	mNodeTbl.push_back(n);
-	return &mNodeTbl.at(mNodeTbl.size() - 1);
-}
-
 Parser::nodeType Parser::GetNodeType(const Token& token) const {
 	if (token.isReturn()) {
 		return nodeType::Return;
@@ -58,41 +53,35 @@ Parser::Node* Parser::Function() {
 	++mCurrentPos;
 
 	//引数部分
-	getCurTk().expect('('); ++mCurrentPos;
-	while (!getCurTk().isReserved(')')) {
+	expectAndNext('(');
+	while (!nextIfIsReserved(")")) {
 		const ValTypeInfo* infoPtr = ReadValueType();
-		if (!infoPtr) {
-			std::cerr << "仮引数の型が指定されていません" << std::endl;
-			assert(0);
-		}
+		assert(infoPtr != nullptr);
 		const int ofs = mCurrentFuncInfoPtr->pushBackToValMap(
 			getCurTk().mStr, infoPtr->getByteSize(), infoPtr
 			);
-		auto p = PushBackNode(Node{
+		auto& p = mNodeTbl.emplace_back(Node{
 			.type = nodeType::LocalVal, .offset = ofs, .valTypeInfoPtr = infoPtr
 			});
-		mCurrentFuncInfoPtr->argumentNodeTbl.push_back(p);
+		mCurrentFuncInfoPtr->argumentNodeTbl.push_back(&p);
 		++mCurrentPos;
 	}
-	++mCurrentPos;
 
 	//関数の本体
-	getCurTk().expect('{'); ++mCurrentPos;
-	while (!getCurTk().isReserved('}')) {
+	expectAndNext('{');
+	while (!nextIfIsReserved("}")) {
 		Node* node = Statement();
 		n.innerBlockNodeTbl.push_back(node);
 	}
-	++mCurrentPos;
-	return PushBackNode(n);
+	return &mNodeTbl.emplace_back(n);
 }
 
 Parser::Node* Parser::Statement() {
 	Node* node;
-	const auto expectAndNext = [&](char c) { getCurTk().expect(c); ++mCurrentPos; };
 	switch ( auto type = GetNodeType(getCurTk()) ) {
 	case nodeType::Return:
 		++mCurrentPos;
-		node = PushBackNode({ .type = type, .lhs = Expr() });
+		node = &mNodeTbl.emplace_back(Node{ .type = type, .lhs = Expr() });
 		expectAndNext(';');
 		break;
 
@@ -104,11 +93,10 @@ Parser::Node* Parser::Statement() {
 		n.lhs = Expr();
 		expectAndNext(')');
 		n.middle = Statement();
-		if (mCurrentPos < mTokenTbl.size() && getCurTk().isReserved("else")) {
-			++mCurrentPos;
+		if (nextIfIsReserved("else")) {
 			n.rhs = Statement();
 		}
-		node = PushBackNode(n);
+		node = &mNodeTbl.emplace_back(n);
 		break;
 	}
 
@@ -126,24 +114,23 @@ Parser::Node* Parser::Statement() {
 		readExprIf(n.lhs, ';');
 		readExprIf(n.middle, ';');
 		readExprIf(n.rhs, ')');
-		node = PushBackNode(n);
+		node = &mNodeTbl.emplace_back(n);
 		break;
 	}
 	case nodeType::While_:
 		++mCurrentPos;
 		expectAndNext('(');
-		node = PushBackNode({ .type = type, .lhs = Expr() });
+		node = &mNodeTbl.emplace_back(Node{ .type = type, .lhs = Expr() });
 		expectAndNext(')');
 		node->rhs = Statement();
 		break;
 	case nodeType::Block: {
 		++mCurrentPos;
 		Node n{ .type = type };
-		while (!getCurTk().isReserved('}')) {
+		while (!nextIfIsReserved("}")) {
 			n.innerBlockNodeTbl.push_back(Statement());
 		}
-		expectAndNext('}');
-		node = PushBackNode(n);
+		node = &mNodeTbl.emplace_back(n);
 		break;
 	}
 	default:
@@ -160,9 +147,8 @@ Parser::Node* Parser::Expr() {
 
 Parser::Node* Parser::Assign() {
 	Node* node = Equality();
-	if (getCurTk().isReserved('=')) {
-		++mCurrentPos;
-		node = PushBackNode(Node{ nodeType::Assign,  node, Assign() });
+	if (nextIfIsReserved("=")) {
+		node = &mNodeTbl.emplace_back(Node{ nodeType::Assign,  node, Assign() });
 	}
 	return node;
 }
@@ -174,7 +160,7 @@ Parser::Node* Parser::Equality() {
 		case nodeType::Eq:
 		case nodeType::Ne:
 			++mCurrentPos;
-			node = PushBackNode(Node{ type, node, Relational() });
+			node = &mNodeTbl.emplace_back(Node{ type, node, Relational() });
 			continue;
 		default:
 			return node;
@@ -192,7 +178,7 @@ Parser::Node* Parser::Relational() {
 		case nodeType::Gt:
 		case nodeType::Ge:
 			++mCurrentPos;
-			node = PushBackNode(Node{ type, node, Add() });
+			node = &mNodeTbl.emplace_back(Node{ type, node, Add() });
 			continue;
 		default:
 			return node;
@@ -208,7 +194,7 @@ Parser::Node* Parser::Add() {
 		case nodeType::Add:
 		case nodeType::Sub:
 			++mCurrentPos;
-			node = PushBackNode(Node{ type, node, Mul() });
+			node = &mNodeTbl.emplace_back(Node{ type, node, Mul() });
 			continue;
 		default:
 			return node;
@@ -224,7 +210,7 @@ Parser::Node* Parser::Mul() {
 		case nodeType::Mul:
 		case nodeType::Div:
 			++mCurrentPos;
-			node = PushBackNode(Node{ type, node, Unary() });
+			node = &mNodeTbl.emplace_back(Node{ type, node, Unary() });
 			continue;
 		default:
 			return node;
@@ -241,15 +227,15 @@ Parser::Node* Parser::Unary() {
 	case nodeType::Sub:   //単項-のときには0－Numに変換する
 		++mCurrentPos;
 		{
-		Node* node = PushBackNode(Node{ nodeType::Num, nullptr, nullptr, 0 });
-		return PushBackNode(Node{ nodeType::Sub, node, Primaly() });
+		Node* node = &mNodeTbl.emplace_back(Node{ nodeType::Num, nullptr, nullptr, 0 });
+		return &mNodeTbl.emplace_back(Node{ nodeType::Sub, node, Primaly() });
 		}
 	case nodeType::Addr:
 		++mCurrentPos;
-		return PushBackNode(Node{ .type = nodeType::Addr, .rhs = Unary() });
+		return &mNodeTbl.emplace_back(Node{ .type = nodeType::Addr, .rhs = Unary() });
 	case nodeType::Mul: //getnodeTypeは'*'をMulとして返す, ここではderef
 		++mCurrentPos;
-		return PushBackNode(Node{ .type = nodeType::Deref, .rhs = Unary() });
+		return &mNodeTbl.emplace_back(Node{ .type = nodeType::Deref, .rhs = Unary() });
 	default:
 		return Primaly();
 	}
@@ -274,9 +260,7 @@ Parser::Node* Parser::Primaly() {
 		const int ofs = mCurrentFuncInfoPtr->pushBackToValMap(
 			t.mStr, typeInfoPtr->getByteSize(), typeInfoPtr
 			);
-		mCurrentFuncInfoPtr->lValOfsMap.emplace(t.mStr, ofs);
-		mCurrentFuncInfoPtr->lValTypeMap.emplace(t.mStr, typeInfoPtr);
-		return PushBackNode(Node{ 
+		return &mNodeTbl.emplace_back(Node{ 
 			.type = nodeType::LocalVal, 
 			.offset = ofs , 
 			.valTypeInfoPtr = typeInfoPtr
@@ -286,22 +270,22 @@ Parser::Node* Parser::Primaly() {
 	if (t.isIdent()) {
 		mCurrentPos++;
 		//"(" が続くなら関数呼び出し
-		if (mTokenTbl[mCurrentPos].isReserved("(")) {
+		if (nextIfIsReserved("(")) {
 			assert(mFuncInfoTbl.contains(t.mStr));
 			Node n{ .type = nodeType::CallFunc , .funcInfoPtr = &mFuncInfoTbl[t.mStr]};
-			++mCurrentPos;
-			while (!getCurTk().isReserved(")")) {
+
+			//実引数部分の読み込み
+			while (!nextIfIsReserved(")")) {
 				n.argumentNodeTbl.push_back(Expr());
-				if (getCurTk().isReserved(",")) ++mCurrentPos;
+				nextIfIsReserved(",");
 			}
-			++mCurrentPos;
-			return PushBackNode(n);
+			return &mNodeTbl.emplace_back(n);
 		}
 
 		//宣言された変数の呼び出し
 		assert(mCurrentFuncInfoPtr->lValOfsMap.contains(t.mStr));
 		assert(mCurrentFuncInfoPtr->lValTypeMap.contains(t.mStr));
-		return PushBackNode(Node{
+		return &mNodeTbl.emplace_back(Node{
 				.type = nodeType::LocalVal,
 				.offset = mCurrentFuncInfoPtr->lValOfsMap.at(t.mStr),
 				.valTypeInfoPtr = mCurrentFuncInfoPtr->lValTypeMap.at(t.mStr)
@@ -310,7 +294,7 @@ Parser::Node* Parser::Primaly() {
 
 	// そうでなければ数値のはず
 	mCurrentPos++;
-	return PushBackNode(Node{ .type = nodeType::Num, .val = t.expectNumber()});
+	return &mNodeTbl.emplace_back(Node{ .type = nodeType::Num, .val = t.expectNumber()});
 }
 
 
@@ -321,9 +305,8 @@ Parser::ValTypeInfo* Parser::ReadValueType(){
 	++mCurrentPos;
 	using enum ValTypeInfo::ValType;
 	ValTypeInfo* retPtr = &mTypeInfoTbl.emplace_back(Int, nullptr);
-	while (getCurTk().isReserved("*")) {
+	while (nextIfIsReserved("*")) {
 		retPtr = &mTypeInfoTbl.emplace_back(Ptr, retPtr);
-		++mCurrentPos;
 	}
 	return retPtr;
 }
@@ -331,7 +314,8 @@ Parser::ValTypeInfo* Parser::ReadValueType(){
 
 void Parser::Parse(vector<Token>& tokenTbl) {
 	mTokenTbl = tokenTbl;
-	//Fix me : ポインタでlhs, rhsを保存しているため、サイズ拡張時にmoveが発生して壊れる。
+	//Fix me : lhs, rhsなどの参照先をポインタで保存しているため
+	// サイズ拡張時にポインタが変更されるためダングリング参照になる。
 	//回避策として多めにとっておく
 	mNodeTbl.reserve(tokenTbl.size() * 10);
 	mRootNodeTbl.reserve(tokenTbl.size());

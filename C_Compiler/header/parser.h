@@ -59,6 +59,8 @@ public:
 		vector<Node*> argumentNodeTbl; //仮引数情報
 		ValTypeInfo* returnValTypeInfoPtr; //返り値の型情報
 		size_t totalBytes; //ローカル変数のサイズ合計
+
+		//関数内のローカル変数情報を登録する。仮引数もここに含まれる
 		size_t pushBackToValMap(string_view name, size_t byteSize, const ValTypeInfo* ptr) {
 			lValTypeMap.emplace(name, ptr);
 			totalBytes += byteSize;
@@ -146,9 +148,6 @@ private:
 	Node* Unary();
 	Node* Primaly();
 
-	//作成したNodeを格納する
-	Node* PushBackNode(Node n);
-
 	//トークンを調べて該当するノードタイプを返す
 	nodeType GetNodeType(const Token& token) const;
 
@@ -158,6 +157,7 @@ private:
 	/// <returns>型情報リンクリストの頭。宣言でないときにはnullptr</returns>
 	ValTypeInfo* ReadValueType();
 
+	//!@brief 式の終わり";"かどうか
 	bool isEndOfState() {
 		assert(mCurrentPos < mTokenTbl.size());
 		return mTokenTbl[mCurrentPos].isReserved(';');
@@ -169,4 +169,20 @@ private:
 		return mTokenTbl[mCurrentPos];
 	}
 
+	//現在のトークンが入力と等しければ次に進む
+	//そうでなければエラーを出力して停止する
+	void expectAndNext(char op) {
+		getCurTk().expect(op);
+		++mCurrentPos;
+	}
+
+	//現在のトークンが入力と等しければ次にすすみtrueを返す
+	//そうでなければfalseを返す
+	bool nextIfIsReserved(string_view sv) {
+		if (getCurTk().isReserved(sv)) {
+			++mCurrentPos;
+			return true;
+		}
+		return false;
+	}
 };
