@@ -430,4 +430,12 @@ namespace sizeofTest {
 			"}";
 		COMPILE_AND_TEST(src, "sizeofSomeCalcWithInt", 4);
 	}
+
+	TEST(CompilerTest, sizeofsizeof) {
+		const auto src =
+			"int main() {"
+			"return sizeof(sizeof(1));"
+			"}";
+		COMPILE_AND_TEST(src, "sizeofsizeof", 4);
+	}
 }
