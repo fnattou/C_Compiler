@@ -34,6 +34,7 @@ public:
 		LocalVal,		//ローカル変数
 		Addr,			//アドレス演算子
 		Deref,			//アドレス外し
+		Sizeof,			//sizeof演算子
 		Return,
 		None,
 	};
@@ -136,6 +137,7 @@ private:
 	//add        = mul ("+" mul | "-" mul)*
 	//mul        = unary ("*" unary | "/" unary)*
 	//unary      = ("+" | "-")? primary
+	//			| "sizeof" unary
 	//		    | "*" unary
 	//			| "&" unary
 	//primary    = num 

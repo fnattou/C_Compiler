@@ -354,7 +354,7 @@ void Compiler::Tokenize() {
 		};
 		//—\–ñŒê‚Ìê‡B•Ï”éŒ¾‚æ‚èæ‚É”»’f‚·‚é
 		bool isContinue = false;
-		for (string_view str : {"return", "if", "while", "for", "else", "int"}) {
+		for (string_view str : {"return", "if", "while", "for", "else", "int", "sizeof"}) {
 			if (checkWord(str)) {
 				const auto type = (str == "return") ? TokenType::Return : TokenType::Reserved;
 				mTokenTbl.emplace_back(type, 0,  ref, str.size());

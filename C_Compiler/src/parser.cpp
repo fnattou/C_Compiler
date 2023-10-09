@@ -12,7 +12,8 @@ Parser::nodeType Parser::GetNodeType(const Token& token) const {
 		{"/", nodeType::Div}, {">", nodeType::Gt}, {"<", nodeType::Lt},
 		{"<=", nodeType::Le}, {">=", nodeType::Ge}, {"==", nodeType::Eq},
 		{"!=", nodeType::Ne}, {"if", nodeType::If_}, {"for", nodeType::For_},
-		{"while", nodeType::While_}, {"{", nodeType::Block}, {"&", nodeType::Addr}
+		{"while", nodeType::While_}, {"{", nodeType::Block}, {"&", nodeType::Addr},
+		{"sizeof", nodeType::Sizeof}
 	};
 	for (const auto& pair : map) {
 		if (token.isReserved(pair.first)) {
@@ -224,10 +225,33 @@ Parser::Node* Parser::Unary() {
 	case nodeType::Add:
 		++mCurrentPos;
 		return Primaly();
+	case nodeType::Sizeof:
+		++mCurrentPos;
+		{
+			//SizeOf“à‚ÌŽ®‚ð’²¸‚µA‚à‚Æ‚Æ‚È‚éŒ^‚ð’T‚·
+			Node* node = Unary();
+			while (node->type != nodeType::Num && node->type != nodeType::LocalVal) {
+				node = node->lhs ? node->lhs : node->rhs;
+			}
+
+			//Œ^‚ÌƒTƒCƒY‚ð”’l‚Æ‚µ‚Ä•Ô‚·
+			int size = 0;
+			if (node->type == nodeType::LocalVal) {
+				size = node->valTypeInfoPtr->getByteSize();
+			}
+			else if (node->type == nodeType::Num) {
+				size = 4;
+			}
+			else {
+				std::cerr << "Sizeof‰‰ŽZŽq“à‚ÅŒ^‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ" << std::endl;
+				assert(0);
+			}
+			return &mNodeTbl.emplace_back(Node{ .type = nodeType::Num, .val = size});
+		}
 	case nodeType::Sub:   //’P€-‚Ì‚Æ‚«‚É‚Í0|Num‚É•ÏŠ·‚·‚é
 		++mCurrentPos;
 		{
-		Node* node = &mNodeTbl.emplace_back(Node{ nodeType::Num, nullptr, nullptr, 0 });
+		Node* node = &mNodeTbl.emplace_back(Node{ .type = nodeType::Num, .val = 0 });
 		return &mNodeTbl.emplace_back(Node{ nodeType::Sub, node, Primaly() });
 		}
 	case nodeType::Addr:
