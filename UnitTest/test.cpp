@@ -2,6 +2,7 @@
 #include "compiler.h"
 #include <Windows.h>
 #include <iostream>
+#include <filesystem>
 #include <string>
 namespace {
 	using std::string, std::string_view;
@@ -391,6 +392,28 @@ namespace addresTest {
 		COMPILE_AND_TEST(src, "AddressAndDeref", 3);
 	}
 
+	TEST(CompilerTest, AddressAndDeref2) {
+		const auto src =
+			"int main() {"
+			"int aa = 3;"
+			"int *a =  &aa;"
+			"*a = 1;"
+			"return *a;"
+			"}";
+		COMPILE_AND_TEST(src, "AddressAndDeref2", 1);
+	}
+
+	TEST(CompilerTest, AddressAndDeref3) {
+		const auto src =
+			"int main() {"
+			"int *a;"
+			"*a = 1;"
+			"return *a;"
+			"}";
+		COMPILE_AND_TEST(src, "AddressAndDeref3", 1);
+	}
+
+
 	TEST(CompilerTest, PointerCalc) {
 		const auto src =
 			"int main() {"
@@ -437,5 +460,51 @@ namespace sizeofTest {
 			"return sizeof(sizeof(1));"
 			"}";
 		COMPILE_AND_TEST(src, "sizeofsizeof", 4);
+	}
+}
+
+namespace arrayTest {
+	TEST(CompilerTest, arrayTestWithSimpleAssign) {
+		const auto src =
+			"int main() {"
+			"int a[2];"
+			"*a = 1;"
+			"return *a;"
+			"}";
+		COMPILE_AND_TEST(src, "arrayTestWithSimpleAssign", 1);
+	}
+
+	TEST(CompilerTest, arrayTestWithSimpleAssign2) {
+		const auto src =
+			"int main() {"
+			"int a[2];"
+			"*(a + 1) = 1;"
+			"return *(a + 1);"
+			"}";
+		COMPILE_AND_TEST(src, "arrayTestWithSimpleAssign2", 1);
+	}
+
+	TEST(CompilerTest, arrayTestWithDeref) {
+		const auto src =
+			"int main() {"
+			"int a[2];"
+			"*a = 1;"
+			"*(a + 1) = 2;"
+			"int *p;"
+			"p = a;"
+			"return *p + *(p + 1);"
+			"}";
+		COMPILE_AND_TEST(src, "arrayTestWithDeref", 3);
+	}
+
+	TEST(CompilerTest, arrayTestWithBrace) {
+		const auto src =
+			"int main() {"
+			"int a[2];"
+			"a[0] = 1;"
+			"a[1] = 2;"
+			"return a[0] + a[1];"
+			"}";
+		COMPILE_AND_TEST(src, "arrayTestWithBrace", 3);
 	}
 }

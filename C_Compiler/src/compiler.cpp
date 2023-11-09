@@ -48,12 +48,17 @@ void Compiler::ReadLValueNode(Parser::Node& node, NodeTblInfo& info) {
 	//  *      a      =       1   ;
 	//Deref   LVal  Assign   Num
 	//の左辺値を読み込む
-	if (node.type == Deref) {
+	if (node.type == Deref && node.rhs->type == LocalVal) {
 		ReadLValueNode(*node.rhs, info);
 		oss << "  pop rax\n";
 		oss << "  push [rax]\n";
 		return;
 	}
+
+	// * (a + 1) = 1;
+	//みたいな場合
+	ReadNodeTree(*node.rhs, info);
+	return;
 
 	std::cerr << "ReadLValueNodeに正しくないノードが入力されています" << std::endl;
 	assert(false);
@@ -115,6 +120,7 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		return;
 	case Type::Assign:
 		ReadLValueNode(*node.lhs, info);
+		//ReadNodeTree(*node.lhs, info);
 		ReadNodeTree(*node.rhs, info);
 		oss << "\n  pop rdi\n";
 		oss << "  pop rax\n";
@@ -254,8 +260,10 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		while (valNodePtr->lhs) valNodePtr = valNodePtr->lhs;
 
 		//ポインタ変数のとき、ポインタのさす型のサイズを取得
-		if (valNodePtr->type == Parser::nodeType::LocalVal
-			&& valNodePtr->valTypeInfoPtr->type == Parser::ValTypeInfo::ValType::Ptr) {
+		if (valNodePtr->type == Parser::nodeType::LocalVal &&
+			(valNodePtr->valTypeInfoPtr->type == Parser::ValTypeInfo::ValType::Ptr || 
+			valNodePtr->valTypeInfoPtr->type == Parser::ValTypeInfo::ValType::Array)
+			) {
 			const auto size = valNodePtr->valTypeInfoPtr->getToTypeSize();
 
 			//本来足す(または引く)べき数にサイズをかける

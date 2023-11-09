@@ -259,7 +259,15 @@ Parser::Node* Parser::Unary() {
 		return &mNodeTbl.emplace_back(Node{ .type = nodeType::Addr, .rhs = Unary() });
 	case nodeType::Mul: //getnodeTypeは'*'をMulとして返す, ここではderef
 		++mCurrentPos;
-		return &mNodeTbl.emplace_back(Node{ .type = nodeType::Deref, .rhs = Unary() });
+		{
+			auto* node = &mNodeTbl.emplace_back(Node{ .type = nodeType::Deref, .rhs = Unary() });
+
+			//本当は全Nodeに計算している型情報を持たせた方がいいけど、暫定的に全探索で対処する
+			auto* ptr = node->rhs;
+			while (!ptr->valTypeInfoPtr) { ptr = (ptr->lhs) ? ptr->lhs : ptr->rhs; }
+			node->valTypeInfoPtr = ptr->valTypeInfoPtr->toPtr;
+			return node;
+		}
 	default:
 		return Primaly();
 	}
@@ -275,18 +283,28 @@ Parser::Node* Parser::Primaly() {
 		return node;
 	}
 
-	//新しい変数の宣言
+	//型名から始まる場合は新しい変数の宣言
 	if (auto* typeInfoPtr = ReadValueType(); typeInfoPtr) {
-		//変数名を読む
+		//登録されている変数テーブルに同名のものがあるなら多重定義でエラー
 		t = getCurTk(); ++mCurrentPos;
-		//登録された既存の変数に同名のものはないはず
 		assert(!mCurrentFuncInfoPtr->lValOfsMap.contains(t.mStr));
 		assert(!mCurrentFuncInfoPtr->lValTypeMap.contains(t.mStr));
-		//新しく変数を登録
-		const int ofs = mCurrentFuncInfoPtr->pushBackToValMap(
-			t.mStr, typeInfoPtr->getByteSize(), typeInfoPtr
-			);
 
+		//配列か確かめる
+		if (nextIfIsReserved("[")) {
+			typeInfoPtr = &mTypeInfoTbl.emplace_back(ValTypeInfo{
+				.type = ValTypeInfo::ValType::Array,
+				.toPtr = typeInfoPtr,
+				.array_size = (size_t)getCurTk().expectNumber(),
+				});
+			++mCurrentPos;
+			expectAndNext(']');
+		}
+
+		//新しく変数を関数のローカル変数テーブルに登録
+		const int ofs = mCurrentFuncInfoPtr->pushBackToValMap(
+			t.mStr, typeInfoPtr->getTotalByteSize(), typeInfoPtr
+			);
 		return &mNodeTbl.emplace_back(Node{ 
 			.type = nodeType::LocalVal, 
 			.offset = ofs , 
@@ -312,10 +330,22 @@ Parser::Node* Parser::Primaly() {
 		//宣言された変数の呼び出し
 		assert(mCurrentFuncInfoPtr->lValOfsMap.contains(t.mStr));
 		assert(mCurrentFuncInfoPtr->lValTypeMap.contains(t.mStr));
+
+		//配列の要素アクセスの場合
+		int ofs = mCurrentFuncInfoPtr->lValOfsMap.at(t.mStr);
+		auto typeInfoPtr = mCurrentFuncInfoPtr->lValTypeMap.at(t.mStr);
+		if (nextIfIsReserved("[")) {
+			ofs -= getCurTk().expectNumber() * 4;
+			++mCurrentPos;
+			typeInfoPtr = typeInfoPtr->toPtr;
+			expectAndNext(']');
+
+		}
+
 		return &mNodeTbl.emplace_back(Node{
 				.type = nodeType::LocalVal,
-				.offset = mCurrentFuncInfoPtr->lValOfsMap.at(t.mStr),
-				.valTypeInfoPtr = mCurrentFuncInfoPtr->lValTypeMap.at(t.mStr)
+				.offset = ofs,
+				.valTypeInfoPtr = typeInfoPtr
 				});
 	}
 

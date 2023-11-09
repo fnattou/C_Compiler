@@ -61,7 +61,8 @@ public:
 		ValTypeInfo* returnValTypeInfoPtr; //返り値の型情報
 		size_t totalBytes; //ローカル変数のサイズ合計
 
-		//関数内のローカル変数情報を登録する。仮引数もここに含まれる
+		//! @brief 関数内のローカル変数情報を登録する。その関数の仮引数もここに含まれる
+		//! @return 関数内での変数のスタックポインタからのオフセット
 		size_t pushBackToValMap(string_view name, size_t byteSize, const ValTypeInfo* ptr) {
 			lValTypeMap.emplace(name, ptr);
 			totalBytes += byteSize;
@@ -74,16 +75,40 @@ public:
 		enum class ValType {
 			Int,
 			Ptr,
+			Array,
 		} type;
+		//typeがポインタの時の、ポインタの指すオブジェクトの型
 		ValTypeInfo* toPtr;
+		//typeが配列の時に使う
+		size_t array_size; 
 		int getByteSize() const {
-			return (type == ValType::Int) ? 4 : 8;
+			switch (type)
+			{
+			case Parser::ValTypeInfo::ValType::Int:
+				return 4;
+				break;
+			case Parser::ValTypeInfo::ValType::Ptr:
+				return 8;
+				break;
+			case Parser::ValTypeInfo::ValType::Array:
+				return 8;
+				break;
+			default:
+				break;
+			}
 		}
+		int getTotalByteSize() const {
+			if (type == ValType::Array) {
+				return toPtr->getByteSize() * array_size;
+			}
+			return getByteSize();
+		}
+
 
 		//ポインタがさす型のサイズを取得
 		int getToTypeSize() const {
-			if (!toPtr) return 0;
-			return toPtr->getByteSize();
+			if (!toPtr) return getByteSize();
+			return toPtr->getToTypeSize();
 		}
 	};
 
