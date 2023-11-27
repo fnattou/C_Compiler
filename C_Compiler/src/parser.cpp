@@ -25,36 +25,56 @@ Parser::nodeType Parser::GetNodeType(const Token& token) const {
 
 void Parser::Program() {
 	while (mCurrentPos < mTokenTbl.size()) {
-			mRootNodeTbl.push_back(Function());
+		auto* retPtr = GlobalDeclare();
+		if (retPtr) mRootNodeTbl.push_back(retPtr);
 	}
 }
 
-Parser::Node* Parser::Function() {
+Parser::Node* Parser::GlobalDeclare() {
 	//返り値の型
 	ValTypeInfo* typeInfoPtr = ReadValueType();
 	if (!typeInfoPtr) {
-		std::cerr << "関数の返り値の型が宣言されていません" << std::endl;
+		std::cerr << "型が宣言されていません" << std::endl;
 		assert(0);
+	}
+
+	//変数名or関数名
+	if (!getCurTk().isIdent()) {
+		std::cerr << "宣言から始まっていません" << std::endl;
+		assert(0);
+	}
+	auto ident = getCurTk().mStr;
+	++mCurrentPos;
+
+	//引数があるかで関数かグローバル変数かわかる
+	//変数の場合
+	if (!nextIfIsReserved("(")) {
+		assert(!mGlobalValTypeInfoMap.contains(ident));
+		//配列か確かめる
+		if (nextIfIsReserved("[")) {
+			typeInfoPtr = &mTypeInfoTbl.emplace_back(ValTypeInfo{
+				.type = ValTypeInfo::ValType::Array,
+				.toPtr = typeInfoPtr,
+				.array_size = (size_t)getCurTk().expectNumber(),
+				});
+			++mCurrentPos;
+			expectAndNext(']');
+		}
+		mGlobalValTypeInfoMap.emplace(ident, typeInfoPtr);
+		expectAndNext(';');
+		return nullptr;
 	}
 
 	Node n{ .type = nodeType::DeclareFunc }; 
-	mFuncInfoTbl.emplace( getCurTk().mStr, 
+	mFuncInfoTbl.emplace( ident, 
 		FuncInfo{ 
-			.name = getCurTk().mStr ,
+			.name = ident,
 			.returnValTypeInfoPtr = typeInfoPtr
 		});
-	mCurrentFuncInfoPtr = &mFuncInfoTbl[getCurTk().mStr];
+	mCurrentFuncInfoPtr = &mFuncInfoTbl[ident];
 	n.funcInfoPtr = mCurrentFuncInfoPtr;
 
-	//関数名
-	if (!getCurTk().isIdent()) {
-		std::cerr << "関数宣言から始まっていません" << std::endl;
-		assert(0);
-	}
-	++mCurrentPos;
-
 	//引数部分
-	expectAndNext('(');
 	while (!nextIfIsReserved(")")) {
 		const ValTypeInfo* infoPtr = ReadValueType();
 		assert(infoPtr != nullptr);
@@ -328,24 +348,41 @@ Parser::Node* Parser::Primaly() {
 		}
 
 		//宣言された変数の呼び出し
-		assert(mCurrentFuncInfoPtr->lValOfsMap.contains(t.mStr));
-		assert(mCurrentFuncInfoPtr->lValTypeMap.contains(t.mStr));
+		//assert(mCurrentFuncInfoPtr->lValOfsMap.contains(t.mStr));
+		//assert(mCurrentFuncInfoPtr->lValTypeMap.contains(t.mStr));
+		int ofs = 0;
+		const ValTypeInfo* typeInfoPtr = nullptr;
+		nodeType type = nodeType::None;
+		string_view valName = {};
+		if (mCurrentFuncInfoPtr->lValTypeMap.contains(t.mStr)) {
+			type = nodeType::LocalVal;
+			ofs = mCurrentFuncInfoPtr->lValOfsMap.at(t.mStr);
+			typeInfoPtr = mCurrentFuncInfoPtr->lValTypeMap.at(t.mStr);
+		}
+		else if (mGlobalValTypeInfoMap.contains(t.mStr)) {
+			type = nodeType::GlobalVal;
+			ofs = 0;
+			typeInfoPtr = mGlobalValTypeInfoMap.at(t.mStr);
+			valName = t.mStr;
+		}
+		else
+		{
+			assert(0);
+		}
 
 		//配列の要素アクセスの場合
-		int ofs = mCurrentFuncInfoPtr->lValOfsMap.at(t.mStr);
-		auto typeInfoPtr = mCurrentFuncInfoPtr->lValTypeMap.at(t.mStr);
 		if (nextIfIsReserved("[")) {
 			ofs -= getCurTk().expectNumber() * 4;
 			++mCurrentPos;
 			typeInfoPtr = typeInfoPtr->toPtr;
 			expectAndNext(']');
-
 		}
 
 		return &mNodeTbl.emplace_back(Node{
-				.type = nodeType::LocalVal,
+				.type = type,
 				.offset = ofs,
-				.valTypeInfoPtr = typeInfoPtr
+				.valTypeInfoPtr = typeInfoPtr,
+				.valName = valName
 				});
 	}
 

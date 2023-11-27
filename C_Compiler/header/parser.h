@@ -32,6 +32,7 @@ public:
 		Ge,
 		Num,
 		LocalVal,		//ローカル変数
+		GlobalVal,		//グローバル変数
 		Addr,			//アドレス演算子
 		Deref,			//アドレス外し
 		Sizeof,			//sizeof演算子
@@ -51,6 +52,7 @@ public:
 		vector<Node*> argumentNodeTbl; // typeがCallFuncの時だけ使う実引数情報
 		FuncInfo* funcInfoPtr; //typeがFuncのときだけ使う
 		const ValTypeInfo* valTypeInfoPtr; //変数の時の型情報
+		string_view valName; //GlobalValのときに使う
 	};
 
 	struct FuncInfo {
@@ -104,7 +106,6 @@ public:
 			return getByteSize();
 		}
 
-
 		//ポインタがさす型のサイズを取得
 		int getToTypeSize() const {
 			if (!toPtr) return getByteSize();
@@ -114,6 +115,7 @@ public:
 
 	// ローカル変数のスタックからのオフセットを保存するための型
 	unordered_map<string_view, int> mlValOfsMap;
+	unordered_map<string_view, const ValTypeInfo*> mGlobalValTypeInfoMap;
 	unordered_map<string_view, FuncInfo> mFuncInfoTbl;
 	//変数の型情報の保存場所
 	vector<ValTypeInfo> mTypeInfoTbl;
@@ -153,8 +155,6 @@ private:
 	//			| "for" "(" expr? ";" expr? ";" expr? ")" statement
 	//			| "return" expr ";"
 	//			| "{" statement* "}"
-
-
 	//expr		 = assign
 	//assign	 = equality ( "=" assign)?
 	//equality   = relational ("==" relational | "!=" relational)*
@@ -170,7 +170,7 @@ private:
 	//			| "(" expr ")"
 
 	void Program();
-	Node* Function();
+	Node* GlobalDeclare();
 	Node* Statement();
 	Node* Expr();
 	Node* Assign();

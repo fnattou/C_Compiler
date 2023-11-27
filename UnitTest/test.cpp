@@ -508,3 +508,15 @@ namespace arrayTest {
 		COMPILE_AND_TEST(src, "arrayTestWithBrace", 3);
 	}
 }
+
+namespace globalVal {
+	TEST(CompilerTest, oneGlobalValue) {
+		const auto src =
+			"int a;"
+			"int main() {"
+			"a = 1;"
+			"return a;"
+			"}";
+		COMPILE_AND_TEST(src, "oneGlobalValue", 1);
+	}
+}

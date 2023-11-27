@@ -13,11 +13,19 @@ void Compiler::Compile(string_view src, string filename) {
 	Tokenize();
 	mParser.Parse(mTokenTbl);
 
-	//アセンブリの前半部分を出力
+	//アセンブリの最初の分
 	oss << ".intel_syntax noprefix\n";
-	oss << ".globl main\n";
+	oss << ".data\n";
+	//グローバル変数を出力
+	for (auto& typeInfoPair : mParser.mGlobalValTypeInfoMap)
+	{
+		oss << typeInfoPair.first << ":\n";
+		oss << "  .zero " << typeInfoPair.second->getTotalByteSize() << "\n";
+	}
 
 	//先頭の式から順にコードを生成
+	oss << ".text\n";
+	oss << ".globl main\n";
 	NodeTblInfo info{ mParser.mRootNodeTbl, 0 };
 	while (!info.isEndOfTbl()) {
 		ReadNodeTree(info.getCurNode(), info);
@@ -42,6 +50,12 @@ void Compiler::ReadLValueNode(Parser::Node& node, NodeTblInfo& info) {
 		oss << "  mov rax, rbp\n";
 		oss << "  sub rax, " << node.offset << "\n";
 		oss << "  push  rax\n";
+		return;
+	}
+
+	if (node.type == GlobalVal) {
+		oss << "  lea rax, " << node.valName << "[rip+" << -node.offset << "]\n";
+		oss << "  push rax\n";
 		return;
 	}
 
@@ -120,7 +134,6 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		return;
 	case Type::Assign:
 		ReadLValueNode(*node.lhs, info);
-		//ReadNodeTree(*node.lhs, info);
 		ReadNodeTree(*node.rhs, info);
 		oss << "\n  pop rdi\n";
 		oss << "  pop rax\n";
@@ -140,6 +153,16 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		}
 		else {
 			oss << "  mov rax, [rax]\n";
+		}
+		oss << "  push rax\n";
+		return;
+	case Type::GlobalVal:
+		oss << "\n  pop rax\n";
+		if (node.valTypeInfoPtr->getByteSize() == 4) {
+			oss << "  mov eax, " << node.valName << "[rip+" << -node.offset << "]\n";
+		}
+		else {
+			oss << "  mov rax, " << node.valName << "[rip+" << -node.offset << "]\n";
 		}
 		oss << "  push rax\n";
 		return;
