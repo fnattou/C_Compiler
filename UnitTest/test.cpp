@@ -519,4 +519,25 @@ namespace globalVal {
 			"}";
 		COMPILE_AND_TEST(src, "oneGlobalValue", 1);
 	}
+
+	TEST(CompilerTest, GlobalArrayValue) {
+		const auto src =
+			"int a[3];"
+			"int main() {"
+			"a[0] = 1;"
+			"return a[0];"
+			"}";
+		COMPILE_AND_TEST(src, "GlobalArrayValue", 1);
+	}
+
+	TEST(CompilerTest, GlobalArrayValue2) {
+		const auto src =
+			"int a[3];"
+			"int main() {"
+			"a[0] = 1;"
+			"a[2] = 1;"
+			"return a[0] + a[2];"
+			"}";
+		COMPILE_AND_TEST(src, "GlobalArrayValue2", 2);
+	}
 }
