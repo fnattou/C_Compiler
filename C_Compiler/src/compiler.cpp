@@ -147,6 +147,7 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		return;
 	case Type::LocalVal:
 		ReadLValueNode(node, info);
+		oss << "\n  pop rax\n";
 		if (node.valTypeInfoPtr->getByteSize() == 4) {
 			oss << "  mov eax, [rax]\n";
 		}
@@ -156,6 +157,7 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		oss << "  push rax\n";
 		return;
 	case Type::GlobalVal:
+		oss << "\n  pop rax\n";
 		if (node.valTypeInfoPtr->getByteSize() == 4) {
 			oss << "  mov eax, " << node.valName << "[rip+" << -node.offset << "]\n";
 		}
