@@ -541,3 +541,47 @@ namespace globalVal {
 		COMPILE_AND_TEST(src, "GlobalArrayValue2", 2);
 	}
 }
+
+
+namespace charTest {
+	TEST(CompilerTest, CharSimpleTest) {
+		const auto src =
+			"int main() {"
+			"char a = 2;"
+			"return a;"
+			"}";
+		COMPILE_AND_TEST(src, "CharSimpleTest", 2);
+	}
+
+	TEST(CompilerTest, CharGlobalTest) {
+		const auto src =
+			"char a;"
+			"int main() {"
+			" a = 2;"
+			"return a;"
+			"}";
+		COMPILE_AND_TEST(src, "CharGlobalTest", 2);
+	}
+
+	TEST(CompilerTest, CharArrayTest) {
+		const auto src =
+			"int main() {"
+			"char a[2];"
+			"a[0] = 1;"
+			"a[1] = 2;"
+			"return a[1];"
+			"}";
+		COMPILE_AND_TEST(src, "CharArrayTest", 2);
+	}
+
+	TEST(CompilerTest, CharArrayAndAddTest) {
+		const auto src =
+			"int main() {"
+			"char a[2];"
+			"a[0] = 1;"
+			"a[1] = 2;"
+			"return a[0] + a[1];"
+			"}";
+		COMPILE_AND_TEST(src, "CharArrayTest", 3);
+	}
+}

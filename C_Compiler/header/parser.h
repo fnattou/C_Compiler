@@ -74,10 +74,14 @@ public:
 	};
 
 	struct ValTypeInfo {
+		static constexpr const char* identStrTbl[] = {
+			"int", "char"
+		};
 		enum class ValType {
 			Int,
 			Ptr,
 			Array,
+			Chara,
 		} type;
 		//typeがポインタの時の、ポインタの指すオブジェクトの型
 		ValTypeInfo* toPtr;
@@ -94,6 +98,9 @@ public:
 				break;
 			case Parser::ValTypeInfo::ValType::Array:
 				return 8;
+				break;
+			case ValType::Chara:
+				return 1;
 				break;
 			default:
 				break;

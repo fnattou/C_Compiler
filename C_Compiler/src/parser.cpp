@@ -367,12 +367,13 @@ Parser::Node* Parser::Primaly() {
 		}
 		else
 		{
+			std::cerr << "宣言されていない変数へのアクセス 宣言子 = " << t.mStr << "\n";
 			assert(0);
 		}
 
 		//配列の要素アクセスの場合
 		if (nextIfIsReserved("[")) {
-			ofs -= getCurTk().expectNumber() * 4;
+			ofs -= getCurTk().expectNumber() * typeInfoPtr->getToTypeSize();
 			++mCurrentPos;
 			typeInfoPtr = typeInfoPtr->toPtr;
 			expectAndNext(']');
@@ -393,12 +394,15 @@ Parser::Node* Parser::Primaly() {
 
 
 Parser::ValTypeInfo* Parser::ReadValueType(){
-	if (!getCurTk().isReserved("int")) {
+	using enum ValTypeInfo::ValType;
+	if (!getCurTk().isReserved(ValTypeInfo::identStrTbl[0]) && 
+		!getCurTk().isReserved(ValTypeInfo::identStrTbl[1])) {
 		return nullptr;
 	}
+	ValTypeInfo* retPtr = getCurTk().isReserved(ValTypeInfo::identStrTbl[0]) ? 
+		&mTypeInfoTbl.emplace_back(Int, nullptr) : &mTypeInfoTbl.emplace_back(Chara, nullptr);
+
 	++mCurrentPos;
-	using enum ValTypeInfo::ValType;
-	ValTypeInfo* retPtr = &mTypeInfoTbl.emplace_back(Int, nullptr);
 	while (nextIfIsReserved("*")) {
 		retPtr = &mTypeInfoTbl.emplace_back(Ptr, retPtr);
 	}

@@ -135,21 +135,27 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 	case Type::Assign:
 		ReadLValueNode(*node.lhs, info);
 		ReadNodeTree(*node.rhs, info);
-		oss << "\n  pop rdi\n";
+		oss << "\n  pop rdx\n";
 		oss << "  pop rax\n";
 		if (node.lhs->valTypeInfoPtr->getByteSize() == 4) {
-			oss << "  mov [rax], edi\n";
+			oss << "  mov [rax], edx\n";
+		}
+		else if (node.lhs->valTypeInfoPtr->getByteSize() == 1) {
+			oss << "  mov BYTE PTR [rax], dl\n";
 		}
 		else {
-			oss << "  mov [rax], rdi\n";
+			oss << "  mov [rax], rdx\n";
 		}
-		oss << "  push rdi\n\n";
+		oss << "  push rdx\n\n";
 		return;
 	case Type::LocalVal:
 		ReadLValueNode(node, info);
 		oss << "\n  pop rax\n";
 		if (node.valTypeInfoPtr->getByteSize() == 4) {
 			oss << "  mov eax, [rax]\n";
+		}
+		else if (node.valTypeInfoPtr->getByteSize() == 1) {
+			oss << "  movsx eax, BYTE PTR [rax]\n";
 		}
 		else {
 			oss << "  mov rax, [rax]\n";
@@ -159,6 +165,9 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 	case Type::GlobalVal:
 		if (node.valTypeInfoPtr->getByteSize() == 4) {
 			oss << "  mov eax, " << node.valName << "[rip+" << -node.offset << "]\n";
+		}
+		else if (node.valTypeInfoPtr->getByteSize() == 1) {
+			oss << "  movsx eax, BYTE PTR " << node.valName << "[rip+" << -node.offset << "]\n";
 		}
 		else {
 			oss << "  mov rax, " << node.valName << "[rip+" << -node.offset << "]\n";
@@ -386,7 +395,7 @@ void Compiler::Tokenize() {
 		//—\–ñŒê‚Ìê‡B•Ï”éŒ¾‚æ‚èæ‚É”»’f‚·‚é
 		{
 			bool isContinue = false;
-			for (string_view str : {"return", "if", "while", "for", "else", "int", "sizeof"}) {
+			for (string_view str : {"return", "if", "while", "for", "else","char", "int", "sizeof"}) {
 				//str‚ÆŒ»ÝŒ©‚Ä‚¢‚é•¶Žš—ñ‚ª“™‚µ‚¢‚©
 				if (!isValidIdx(i + str.size() - 1) || memcmp(ref, str.data(), str.size()) != 0) {
 					continue;
