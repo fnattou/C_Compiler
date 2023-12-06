@@ -584,4 +584,14 @@ namespace charTest {
 			"}";
 		COMPILE_AND_TEST(src, "CharArrayTest", 3);
 	}
+
+	TEST(CompilerTest, LiteralSimpleTest) {
+		const auto src =
+			"int main() {"
+			"char a[2] = \"00\";"
+			"return a[1];"
+			"}";
+		COMPILE_AND_TEST(src, "LiteralSimpleTest", 48);
+	}
 }
+

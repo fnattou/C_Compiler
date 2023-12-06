@@ -5,6 +5,7 @@
 #include <set>
 #include "token.h"
 using std::vector;
+using std::string;
 using std::string_view;
 using std::unordered_map;
 
@@ -36,6 +37,7 @@ public:
 		Addr,			//アドレス演算子
 		Deref,			//アドレス外し
 		Sizeof,			//sizeof演算子
+		Literal,		//文字列リテラル
 		Return,
 		None,
 	};
@@ -126,6 +128,8 @@ public:
 	unordered_map<string_view, FuncInfo> mFuncInfoTbl;
 	//変数の型情報の保存場所
 	vector<ValTypeInfo> mTypeInfoTbl;
+	//コードにでてくる文字列リテラルをすべて保存する場所
+	unordered_map<string, string_view> mLiteralStrTbl;
 
 	FuncInfo* mCurrentFuncInfoPtr;
 	

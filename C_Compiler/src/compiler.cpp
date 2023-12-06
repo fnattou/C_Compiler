@@ -16,9 +16,13 @@ void Compiler::Compile(string_view src, string filename) {
 	//アセンブリの最初の分
 	oss << ".intel_syntax noprefix\n";
 	oss << ".data\n";
+	//使用する文字列リテラルをすべて出力
+	for (auto& pair : mParser.mLiteralStrTbl) {
+		oss << "." << pair.first << ":\n";
+		oss << "  .string \"" << pair.second << "\"\n";
+	}
 	//グローバル変数を出力
-	for (auto& typeInfoPair : mParser.mGlobalValTypeInfoMap)
-	{
+	for (auto& typeInfoPair : mParser.mGlobalValTypeInfoMap) {
 		oss << typeInfoPair.first << ":\n";
 		oss << "  .zero " << typeInfoPair.second->getTotalByteSize() << "\n";
 	}
@@ -174,6 +178,8 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		}
 		oss << "  push rax\n";
 		return;
+	case Type::Literal:
+		oss << "  lea rax, OFFSET FLAT:." << node.valName << "\n";
 	case Type::Return:
 		ReadNodeTree(*node.lhs, info);
 		oss << "  pop rax\n";
@@ -363,6 +369,19 @@ void Compiler::Tokenize() {
 		//スペースや改行はスキップする
 		if (isspace(c) || c == '\r' || c == '\n' || c == '\t') {
 			continue;
+		}
+
+		//文字列リテラル
+		if (c == '\"')
+		{
+			size_t start = i;
+			ref = &mSrcStr[++i];
+			while (c == '\"')
+			{
+				++i;
+			}
+			mTokenTbl.emplace_back(TokenType::Literal, 0, ref, i - start);
+
 		}
 
 		//演算子、括弧、文末などの特殊文字

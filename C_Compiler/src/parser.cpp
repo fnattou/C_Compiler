@@ -387,6 +387,17 @@ Parser::Node* Parser::Primaly() {
 				});
 	}
 
+	//文字列リテラルの場合
+	//文字列を保存ベクタにすべて格納しておく
+	if (t.isLiteral()) {
+		static int literalCnt = 0;
+		string name = "LC" + literalCnt++;
+		return &mNodeTbl.emplace_back(Node{
+			.type = nodeType::Literal,
+			.valName = (*mLiteralStrTbl.emplace(name, t.mStr).first).first
+			}); 
+	}
+
 	// そうでなければ数値のはず
 	mCurrentPos++;
 	return &mNodeTbl.emplace_back(Node{ .type = nodeType::Num, .val = t.expectNumber()});

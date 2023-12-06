@@ -9,6 +9,7 @@ struct Token
 		Reserved, //記号
 		Num,      //整数
 		Ident,    //識別子
+		Literal,  //文字列リテラル
 		Return,   //retun宣言
 		Eof,      //入力の終わり
 	};
@@ -48,6 +49,10 @@ struct Token
 
 	bool isReturn() const {
 		return mType == Token::TokenType::Return;
+	}
+
+	bool isLiteral() const {
+		return mType == Token::TokenType::Literal;
 	}
 
 	bool isReserved(char op) const {
