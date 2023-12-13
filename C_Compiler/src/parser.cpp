@@ -390,8 +390,9 @@ Parser::Node* Parser::Primaly() {
 	//文字列リテラルの場合
 	//文字列を保存ベクタにすべて格納しておく
 	if (t.isLiteral()) {
+		++mCurrentPos;
 		static int literalCnt = 0;
-		string name = "LC" + literalCnt++;
+		string name = "LC" + std::to_string(literalCnt++);
 		return &mNodeTbl.emplace_back(Node{
 			.type = nodeType::Literal,
 			.valName = (*mLiteralStrTbl.emplace(name, t.mStr).first).first

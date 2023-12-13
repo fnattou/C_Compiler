@@ -78,6 +78,11 @@ namespace makingAsmFile {
 		assemble("test");
 		EXPECT_EQ(execute(L"test"), 42);
 	}
+
+	TEST(CompilerTest, ExecuteAssembly) {
+		assemble("LiteralSimpleTest");
+		EXPECT_EQ(execute(L"LiteralSimpleTest"), 0);
+	}
 }
 
 namespace addAndSub {
@@ -588,10 +593,20 @@ namespace charTest {
 	TEST(CompilerTest, LiteralSimpleTest) {
 		const auto src =
 			"int main() {"
-			"char a[2] = \"00\";"
-			"return a[1];"
+			"char* a = \"0\";"
+			"return a[0];"
 			"}";
 		COMPILE_AND_TEST(src, "LiteralSimpleTest", 48);
 	}
+
+	TEST(CompilerTest, LiteralSimpleTest2) {
+		const auto src =
+			"int main() {"
+			"char* a = \"Hello World\";"
+			"return a[10];"
+			"}";
+		COMPILE_AND_TEST(src, "LiteralSimpleTest2", 100);
+	}
+
 }
 

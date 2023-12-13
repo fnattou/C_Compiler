@@ -179,7 +179,9 @@ void Compiler::ReadNodeTree(Parser::Node& node, NodeTblInfo& info) {
 		oss << "  push rax\n";
 		return;
 	case Type::Literal:
-		oss << "  lea rax, OFFSET FLAT:." << node.valName << "\n";
+		oss << "  mov rax, OFFSET FLAT:." << node.valName << "[rip]\n";
+		oss << "  push rax";
+		return;
 	case Type::Return:
 		ReadNodeTree(*node.lhs, info);
 		oss << "  pop rax\n";
@@ -374,14 +376,14 @@ void Compiler::Tokenize() {
 		//文字列リテラル
 		if (c == '\"')
 		{
-			size_t start = i;
-			ref = &mSrcStr[++i];
-			while (c == '\"')
+			size_t start = ++i;
+			ref = &mSrcStr[start];
+			while (mSrcStr[i] != '\"')
 			{
 				++i;
 			}
 			mTokenTbl.emplace_back(TokenType::Literal, 0, ref, i - start);
-
+			continue;
 		}
 
 		//演算子、括弧、文末などの特殊文字
